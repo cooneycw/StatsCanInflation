@@ -27,6 +27,13 @@ def create_header_panel():
                 4,
                 ui.div(
                     ui.input_action_button(
+                        "load_cached_data",
+                        "Load Cached Data",
+                        class_="btn-success",
+                        icon=ui.tags.i(class_="fa fa-database"),
+                        style="margin-right: 10px;"
+                    ),
+                    ui.input_action_button(
                         "refresh_data",
                         "Refresh Data",
                         class_="btn-primary",

@@ -64,6 +64,32 @@ def server(input, output, session):
     # ===== DATA LOADING =====
 
     @reactive.Effect
+    @reactive.event(input.load_cached_data)
+    def load_cached_data():
+        """Load data from cache when user clicks Load Cached Data button."""
+        logger.info("Loading CPI data from cache...")
+        ui.notification_show(
+            "Loading cached data...",
+            duration=2,
+            type="message"
+        )
+
+        try:
+            df = get_cached_or_download(force_refresh=False)
+            df = add_all_inflation_metrics(df)
+            cpi_data.set(df)
+            data_load_time.set(datetime.now())
+            ui.notification_show("Data loaded successfully!", type="message", duration=3)
+            logger.info("Data load complete")
+        except Exception as e:
+            logger.error(f"Data load failed: {e}")
+            ui.notification_show(
+                f"Failed to load data: {str(e)}",
+                type="error",
+                duration=10
+            )
+
+    @reactive.Effect
     @reactive.event(input.refresh_data)
     def refresh_data():
         """Refresh data when user clicks refresh button."""
