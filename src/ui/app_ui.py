@@ -64,12 +64,17 @@ def create_recent_trends_tab():
                     "Select categories:",
                     choices={
                         "All-items": "All-items",
+                        "Goods": "Goods",
+                        "Services": "Services",
+                        "Energy": "Energy",
+                        "All-items excluding food and energy": "All-items ex food & energy",
+                        "All-items excluding energy": "All-items ex energy",
+                        "Clothing and footwear": "Clothing",
                         "Food": "Food",
-                        "Shelter": "Shelter",
-                        "Transportation": "Transportation",
                         "Gasoline": "Gasoline",
                         "Health and personal care": "Health",
-                        "Clothing and footwear": "Clothing",
+                        "Shelter": "Shelter",
+                        "Transportation": "Transportation",
                     },
                     selected=["All-items", "Food", "Shelter"]
                 ),
@@ -133,11 +138,16 @@ def create_historical_tab():
                     "historical_categories",
                     "Categories:",
                     choices={
-                        "All-items": "All-items (Overall CPI)",
+                        "All-items": "All-items",
+                        "Goods": "Goods",
+                        "Services": "Services",
+                        "Energy": "Energy",
+                        "All-items excluding food and energy": "All-items ex food & energy",
+                        "All-items excluding energy": "All-items ex energy",
                         "Food": "Food",
+                        "Gasoline": "Gasoline",
                         "Shelter": "Shelter",
                         "Transportation": "Transportation",
-                        "Gasoline": "Gasoline",
                     },
                     selected=["All-items"]
                 ),
@@ -233,14 +243,19 @@ def create_custom_analysis_tab():
                     "Select Categories:",
                     choices={
                         "All-items": "All-items",
+                        "Goods": "Goods",
+                        "Services": "Services",
+                        "Energy": "Energy",
+                        "All-items excluding food and energy": "All-items ex food & energy",
+                        "All-items excluding energy": "All-items ex energy",
+                        "Clothing and footwear": "Clothing",
                         "Food": "Food",
-                        "Shelter": "Shelter",
-                        "Transportation": "Transportation",
                         "Gasoline": "Gasoline",
                         "Health and personal care": "Health",
-                        "Recreation, education and reading": "Recreation & Education",
-                        "Clothing and footwear": "Clothing",
                         "Household operations, furnishings and equipment": "Household Ops",
+                        "Recreation, education and reading": "Recreation & Education",
+                        "Shelter": "Shelter",
+                        "Transportation": "Transportation",
                     },
                     selected=["All-items", "Food", "Shelter"]
                 ),
@@ -285,21 +300,18 @@ def create_data_table_tab():
                     selected="yoy"
                 ),
                 ui.hr(),
-                ui.input_date_range(
-                    "table_date_range",
-                    "Date Range:",
-                    start=None,  # Will be set in server
-                    end=None,
-                ),
-                ui.hr(),
+                ui.h4("Date Range"),
                 ui.input_select(
-                    "table_categories",
-                    "Category filter:",
-                    choices={
-                        "key": "Key Categories Only",
-                        "all": "All Categories"
-                    },
-                    selected="key"
+                    "table_date_from",
+                    "From:",
+                    choices=["2025-01"],  # Will be populated by server
+                    selected="2025-01"
+                ),
+                ui.input_select(
+                    "table_date_to",
+                    "To:",
+                    choices=["2025-01"],  # Will be populated by server
+                    selected="2025-01"
                 ),
                 ui.hr(),
                 ui.download_button("download_table_csv", "Download as CSV"),
@@ -307,6 +319,7 @@ def create_data_table_tab():
             ),
             ui.h3("CPI Data Table (Wide Format)"),
             ui.p("Categories as rows, dates as columns - matches original Statistics Canada format"),
+            ui.p("Priority categories (All-items, Goods, Services, Energy, etc.) are listed first, followed by other categories alphabetically."),
             ui.output_data_frame("wide_format_table"),
         )
     )

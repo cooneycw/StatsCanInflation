@@ -31,6 +31,7 @@ from ..utils.formatting import (
     format_date,
     format_date_short,
     format_change_with_indicator,
+    sort_categories,
 )
 from ..utils.export import create_excel_report, create_simple_csv_export
 
@@ -253,12 +254,17 @@ def server(input, output, session):
         if recent_data is None or len(recent_data) == 0:
             return ui.p("No data available")
 
+        # Get sorted category order for legend
+        categories = recent_data['category'].unique().tolist()
+        sorted_cats = sort_categories(categories)
+
         fig = px.line(
             recent_data,
             x='date',
             y='yoy_change',
             color='category',
-            labels={'yoy_change': 'YoY Inflation (%)', 'date': 'Date', 'category': 'Category'}
+            labels={'yoy_change': 'YoY Inflation (%)', 'date': 'Date', 'category': 'Category'},
+            category_orders={'category': sorted_cats}
         )
 
         # Add 2% inflation target line if requested
@@ -513,13 +519,18 @@ def server(input, output, session):
         if historical_data is None or len(historical_data) == 0:
             return ui.p("No data available")
 
+        # Get sorted category order for legend
+        categories = historical_data['category'].unique().tolist()
+        sorted_cats = sort_categories(categories)
+
         fig = px.line(
             historical_data,
             x='date',
             y='value',
             color='category',
             title='Consumer Price Index (CPI) Over Time (Base 2002=100)',
-            labels={'value': 'CPI Value', 'date': 'Date', 'category': 'Category'}
+            labels={'value': 'CPI Value', 'date': 'Date', 'category': 'Category'},
+            category_orders={'category': sorted_cats}
         )
 
         fig.update_layout(
@@ -537,13 +548,18 @@ def server(input, output, session):
         if historical_data is None or len(historical_data) == 0:
             return ui.p("No data available")
 
+        # Get sorted category order for legend
+        categories = historical_data['category'].unique().tolist()
+        sorted_cats = sort_categories(categories)
+
         fig = px.line(
             historical_data,
             x='date',
             y='yoy_change',
             color='category',
             title='Year-over-Year Inflation Rate (%)',
-            labels={'yoy_change': 'YoY Change (%)', 'date': 'Date', 'category': 'Category'}
+            labels={'yoy_change': 'YoY Change (%)', 'date': 'Date', 'category': 'Category'},
+            category_orders={'category': sorted_cats}
         )
 
         fig.update_layout(
@@ -582,13 +598,18 @@ def server(input, output, session):
 
         combined = pd.concat(cumulative_data, ignore_index=True)
 
+        # Get sorted category order for legend
+        categories_in_data = combined['category'].unique().tolist()
+        sorted_cats = sort_categories(categories_in_data)
+
         fig = px.line(
             combined,
             x='date',
             y='cumulative_inflation',
             color='category',
             title='Cumulative Inflation from Start of Period (%)',
-            labels={'cumulative_inflation': 'Cumulative Inflation (%)', 'date': 'Date', 'category': 'Category'}
+            labels={'cumulative_inflation': 'Cumulative Inflation (%)', 'date': 'Date', 'category': 'Category'},
+            category_orders={'category': sorted_cats}
         )
 
         fig.update_layout(
@@ -651,6 +672,17 @@ def server(input, output, session):
         if breakdown is None or len(breakdown) == 0:
             return ui.p("No data available")
 
+        # Determine y-axis ordering based on sort selection
+        sort_by = input.breakdown_sort()
+        if sort_by == "category":
+            # Use custom category ordering
+            categories_in_data = breakdown['category'].tolist()
+            sorted_cats = sort_categories(categories_in_data)
+            # Reverse for better display (top to bottom)
+            sorted_cats_reversed = list(reversed(sorted_cats))
+        else:
+            sorted_cats_reversed = None
+
         fig = px.bar(
             breakdown,
             x='yoy_change',
@@ -659,13 +691,20 @@ def server(input, output, session):
             title='Year-over-Year Inflation by Category (%)',
             labels={'yoy_change': 'YoY Inflation (%)', 'category': 'Category'},
             color='yoy_change',
-            color_continuous_scale='RdYlGn_r'
+            color_continuous_scale='RdYlGn_r',
+            category_orders={'category': sorted_cats_reversed} if sorted_cats_reversed else None
         )
 
-        fig.update_layout(
-            yaxis={'categoryorder': 'total ascending'},
-            height=max(400, len(breakdown) * 25)
-        )
+        if not sorted_cats_reversed:
+            # For value-based sorting, keep the original behavior
+            fig.update_layout(
+                yaxis={'categoryorder': 'total ascending'},
+                height=max(400, len(breakdown) * 25)
+            )
+        else:
+            fig.update_layout(
+                height=max(400, len(breakdown) * 25)
+            )
 
         return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
@@ -701,13 +740,18 @@ def server(input, output, session):
         if len(trends) == 0:
             return ui.p("No data available")
 
+        # Get sorted category order for legend
+        categories_in_data = trends['category'].unique().tolist()
+        sorted_cats = sort_categories(categories_in_data)
+
         fig = px.line(
             trends,
             x='date',
             y='yoy_change',
             color='category',
             title='Inflation Trends - Last 12 Months (Top 5 Categories)',
-            labels={'yoy_change': 'YoY Inflation (%)', 'date': 'Date', 'category': 'Category'}
+            labels={'yoy_change': 'YoY Inflation (%)', 'date': 'Date', 'category': 'Category'},
+            category_orders={'category': sorted_cats}
         )
 
         fig.update_layout(
@@ -765,13 +809,18 @@ def server(input, output, session):
         if custom_data is None or len(custom_data) == 0:
             return ui.p("No data available")
 
+        # Get sorted category order for legend
+        categories_in_data = custom_data['category'].unique().tolist()
+        sorted_cats = sort_categories(categories_in_data)
+
         fig = px.line(
             custom_data,
             x='date',
             y='yoy_change',
             color='category',
             title='Year-over-Year Inflation Comparison',
-            labels={'yoy_change': 'YoY Inflation (%)', 'date': 'Date', 'category': 'Category'}
+            labels={'yoy_change': 'YoY Inflation (%)', 'date': 'Date', 'category': 'Category'},
+            category_orders={'category': sorted_cats}
         )
 
         fig.update_layout(
@@ -883,6 +932,29 @@ def server(input, output, session):
 
     # ===== DATA TABLE TAB =====
 
+    @reactive.Effect
+    def populate_table_date_dropdowns():
+        """Populate date dropdowns with available dates in yyyy-mm format."""
+        df = cpi_data.get()
+        if df is None:
+            return
+
+        # Get unique dates and format as yyyy-mm
+        unique_dates = sorted(df['date'].unique(), reverse=True)
+        date_choices = [d.strftime('%Y-%m') for d in unique_dates]
+
+        # Update dropdown choices
+        ui.update_select(
+            "table_date_from",
+            choices=date_choices,
+            selected="2025-01" if "2025-01" in date_choices else date_choices[-1]
+        )
+        ui.update_select(
+            "table_date_to",
+            choices=date_choices,
+            selected=date_choices[0]  # Latest date
+        )
+
     @reactive.Calc
     def get_table_data():
         """Get data formatted for wide-format table display."""
@@ -890,29 +962,17 @@ def server(input, output, session):
         if df is None:
             return None
 
-        # Apply date range filter
-        date_range = input.table_date_range()
-        if date_range:
-            start_date = pd.to_datetime(date_range[0])
-            end_date = pd.to_datetime(date_range[1])
-            df = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
+        # Apply date range filter using yyyy-mm selections
+        date_from = input.table_date_from()
+        date_to = input.table_date_to()
 
-        # Apply category filter
-        if input.table_categories() == "key":
-            # Define key categories
-            key_categories = [
-                "All-items",
-                "Food",
-                "Shelter",
-                "Transportation",
-                "Gasoline",
-                "Health and personal care",
-                "Recreation, education and reading",
-                "Clothing and footwear",
-                "Household operations, furnishings and equipment",
-                "Alcoholic beverages, tobacco products and recreational cannabis"
-            ]
-            df = df[df['category'].isin(key_categories)]
+        if date_from and date_to:
+            # Convert yyyy-mm to datetime for filtering
+            start_date = pd.to_datetime(date_from + "-01")
+            end_date = pd.to_datetime(date_to + "-01")
+
+            # Filter data
+            df = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
 
         # Select value column based on type
         value_type = input.table_value_type()
@@ -931,6 +991,20 @@ def server(input, output, session):
 
         # Reset index to make category a column
         wide_df = wide_df.reset_index()
+
+        # Apply category ordering - priority categories first, then alphabetical
+        categories = wide_df['category'].tolist()
+        sorted_categories = sort_categories(categories)
+
+        # Create a categorical type with the sorted order
+        wide_df['category'] = pd.Categorical(
+            wide_df['category'],
+            categories=sorted_categories,
+            ordered=True
+        )
+
+        # Sort by category using the custom ordering
+        wide_df = wide_df.sort_values('category').reset_index(drop=True)
 
         return wide_df
 

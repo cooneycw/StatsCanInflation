@@ -5,7 +5,63 @@ Functions for formatting numbers, dates, and percentages for display.
 """
 
 import pandas as pd
-from typing import Optional, Union
+from typing import Optional, Union, List
+
+
+# CRITICAL: Category ordering convention
+# Priority categories MUST always appear first in this exact order
+PRIORITY_CATEGORIES = [
+    "All-items",
+    "Goods",
+    "Services",
+    "Energy",
+    "All-items excluding food and energy",
+    "All-items excluding energy"
+]
+
+
+def sort_categories(categories: List[str]) -> List[str]:
+    """
+    Sort categories according to the standard convention.
+
+    Priority categories appear first in order, then all others alphabetically.
+
+    Args:
+        categories: List of category names
+
+    Returns:
+        Sorted list of categories
+    """
+    priority = []
+    others = []
+
+    for cat in categories:
+        if cat in PRIORITY_CATEGORIES:
+            priority.append(cat)
+        else:
+            others.append(cat)
+
+    # Sort priority categories by their defined order
+    priority_sorted = sorted(priority, key=lambda x: PRIORITY_CATEGORIES.index(x))
+
+    # Sort other categories alphabetically
+    others_sorted = sorted(others)
+
+    return priority_sorted + others_sorted
+
+
+def create_category_choices_dict(categories: List[str]) -> dict:
+    """
+    Create a choices dictionary for UI inputs with proper ordering.
+
+    Args:
+        categories: List of available category names
+
+    Returns:
+        Dictionary suitable for shiny input choices {value: label}
+    """
+    sorted_cats = sort_categories(categories)
+    return {cat: cat for cat in sorted_cats}
 
 
 def format_percentage(

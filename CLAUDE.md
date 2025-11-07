@@ -8,14 +8,35 @@ This is a Python project for analyzing Canadian inflation data from Statistics C
 
 ## Data Structure
 
-The project uses Statistics Canada CSV data located in `Data/`:
-- **Format**: CSV files with metadata header rows followed by time series data
-- **Structure**: First ~8 rows contain metadata (table info, release date, geography), followed by product categories as rows and monthly time periods as columns
-- **Base Year**: CPI values are indexed to 2002=100
-- **Current Data**: `Data/1810000401-eng.csv` contains CPI data from January 2008 through September 2025
+The project downloads CPI data from Statistics Canada Table 18-10-0004-01:
+- **Source**: https://www150.statcan.gc.ca/n1/tbl/csv/18100004-eng.zip (ZIP file containing CSV)
+- **Format**: Long-format CSV with columns: REF_DATE, GEO, Products and product groups, VALUE
+- **Base Year**: CPI values are indexed to 2002=100 (older base years filtered out)
+- **Coverage**: Data from 1914 to present (184k+ data points across 357 categories)
+- **Caching**: Downloaded data cached locally as parquet file in `Data/` (1-day expiry)
 
-Key CPI categories in the dataset:
-- All-items (overall CPI)
+## CRITICAL: Category Ordering Convention
+
+**ALL category dropdowns, legends, and tabular views MUST follow this exact ordering:**
+
+**Priority Categories (always first, in this order):**
+1. All-items
+2. Goods
+3. Services
+4. Energy
+5. All-items excluding food and energy
+6. All-items excluding energy
+
+**Remaining Categories:**
+- All other categories displayed in alphabetical order after the priority categories
+
+This ordering convention MUST be applied consistently across:
+- All dropdown menus/checkbox groups
+- All plot legends
+- All table displays
+- Data exports
+
+Key individual CPI categories in the dataset:
 - Food
 - Shelter
 - Transportation
@@ -69,11 +90,12 @@ StatsCanInflation/
    - Global parameter consistency: Each input defined ONCE with unique ID
    - Reactive pattern: Value → Calc → Effect → Output
 
-4. **Four Analysis Tabs**:
-   - Recent Trends: Last 12-24 months, MoM and YoY changes
-   - Historical Comparison: Long-term trends (2008-present)
-   - Category Breakdown: Detailed analysis by CPI category
-   - Custom Analysis: User-selected date ranges and filters
+4. **Five Analysis Tabs**:
+   - **Recent Trends**: Enhanced dashboard with 4 metric cards (Current Inflation, MoM Change, Trend Direction, Momentum), YoY plot with 2% target line, acceleration/deceleration chart, rolling averages, and category heatmap
+   - **Historical Comparison**: Long-term trends (2008-present) with CPI index, YoY rates, and cumulative inflation
+   - **Category Breakdown**: Detailed analysis by CPI category with sortable bar charts and trend plots
+   - **Custom Analysis**: User-selected date ranges and filters with Excel/CSV export
+   - **Data Table**: Wide-format view (categories as rows, dates as columns) matching original Stats Can format, with toggleable value types (CPI/YoY/MoM) and CSV download
 
 ## Development Commands
 
@@ -121,10 +143,12 @@ flake8 src/
 
 ```bash
 # Deploy to shinyapps.io
-rsconnect deploy shiny . --entrypoint main:app --title stats_can_inflation
+rsconnect deploy shiny . --new --title "stats_can_inflation"
 
-# App will be deployed to:
+# App is deployed to:
 # https://cooneycw.shinyapps.io/stats_can_inflation/
+
+# Note: Requires requirements.txt file (not pip freeze) to avoid SSH git dependencies
 ```
 
 ### Git Workflow
