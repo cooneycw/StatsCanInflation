@@ -1021,35 +1021,38 @@ def server(input, output, session):
         for col in numeric_cols:
             table_data[col] = table_data[col].round(1)
 
-        # Create row styles based on category
+        # Apply row styling using pandas Styler
         from ..utils.formatting import PRIORITY_CATEGORIES
 
-        def get_row_style(row_index):
-            """Determine background color for row based on category."""
-            category = table_data.iloc[row_index]['category']
+        def highlight_rows(row):
+            """Apply background color based on category."""
+            category = row['category']
 
             if category in PRIORITY_CATEGORIES:
-                # Priority categories get a distinct background
-                return {'background-color': '#e3f2fd'}  # Light blue
+                # Priority categories get light blue background
+                return ['background-color: #e3f2fd'] * len(row)
             else:
-                # Non-priority categories get alternating gray
-                # Find the index among non-priority rows
-                non_priority_index = sum(1 for i in range(row_index)
+                # Get the row's position in the DataFrame
+                row_idx = row.name
+                # Count non-priority rows before this one
+                non_priority_count = sum(1 for i in range(row_idx)
                                         if table_data.iloc[i]['category'] not in PRIORITY_CATEGORIES)
-                if non_priority_index % 2 == 0:
-                    return {'background-color': '#f5f5f5'}  # Light gray
-                else:
-                    return {}  # White (default)
 
-        # Apply row styles
-        styles = [get_row_style(i) for i in range(len(table_data))]
+                if non_priority_count % 2 == 0:
+                    # Alternating light gray
+                    return ['background-color: #f5f5f5'] * len(row)
+                else:
+                    # White (default)
+                    return [''] * len(row)
+
+        # Apply styling
+        styled_df = table_data.style.apply(highlight_rows, axis=1)
 
         return render.DataGrid(
-            table_data,
+            styled_df,
             width="100%",
             height="600px",
-            row_selection_mode="none",
-            styles=styles
+            selection_mode="none"
         )
 
     @output
