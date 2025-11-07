@@ -437,20 +437,36 @@ def server(input, output, session):
     @output
     @render.ui
     def category_heatmap():
-        """Create heatmap of recent inflation by ALL categories."""
+        """Create heatmap of recent inflation by key categories."""
         df = cpi_data.get()
         if df is None:
             return ui.p("Loading...")
 
-        # Get last 12 months of data for ALL categories
+        # Get last 12 months of data for key categories only
         max_date = df['date'].max()
         cutoff_date = max_date - pd.DateOffset(months=12)
 
-        # Get all unique categories
-        all_categories = df['category'].unique().tolist()
+        # Define key categories: grouped + specific
+        key_categories = [
+            "All-items",
+            "Goods",
+            "Services",
+            "Energy",
+            "All-items excluding food and energy",
+            "All-items excluding energy",
+            "Food",
+            "Shelter",
+            "Household operations, furnishings and equipment",
+            "Clothing and footwear",
+            "Transportation",
+            "Gasoline",
+            "Health and personal care",
+            "Recreation, education and reading",
+            "Alcoholic beverages, tobacco products and recreational cannabis"
+        ]
 
         # Sort categories using our standard ordering
-        sorted_categories = sort_categories(all_categories)
+        sorted_categories = sort_categories(key_categories)
 
         recent = df[
             (df['date'] >= cutoff_date) &
@@ -473,8 +489,8 @@ def server(input, output, session):
             hovertemplate='%{y}<br>%{x}<br>%{z:.1f}%<extra></extra>'
         ))
 
-        # Calculate height based on number of categories (at least 15px per category)
-        height = max(400, len(sorted_categories) * 15)
+        # Calculate height based on number of categories (at least 20px per category)
+        height = max(400, len(sorted_categories) * 20)
 
         fig.update_layout(
             xaxis_title="",
