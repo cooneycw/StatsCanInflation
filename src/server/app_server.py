@@ -1016,15 +1016,40 @@ def server(input, output, session):
         if table_data is None or len(table_data) == 0:
             return None
 
-        # Round numeric columns to 2 decimal places
+        # Round numeric columns to 1 decimal place for better readability
         numeric_cols = table_data.select_dtypes(include=[np.number]).columns
         for col in numeric_cols:
-            table_data[col] = table_data[col].round(2)
+            table_data[col] = table_data[col].round(1)
+
+        # Create row styles based on category
+        from ..utils.formatting import PRIORITY_CATEGORIES
+
+        def get_row_style(row_index):
+            """Determine background color for row based on category."""
+            category = table_data.iloc[row_index]['category']
+
+            if category in PRIORITY_CATEGORIES:
+                # Priority categories get a distinct background
+                return {'background-color': '#e3f2fd'}  # Light blue
+            else:
+                # Non-priority categories get alternating gray
+                # Find the index among non-priority rows
+                non_priority_index = sum(1 for i in range(row_index)
+                                        if table_data.iloc[i]['category'] not in PRIORITY_CATEGORIES)
+                if non_priority_index % 2 == 0:
+                    return {'background-color': '#f5f5f5'}  # Light gray
+                else:
+                    return {}  # White (default)
+
+        # Apply row styles
+        styles = [get_row_style(i) for i in range(len(table_data))]
 
         return render.DataGrid(
             table_data,
             width="100%",
-            height="600px"
+            height="600px",
+            row_selection_mode="none",
+            styles=styles
         )
 
     @output
