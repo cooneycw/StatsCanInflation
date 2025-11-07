@@ -11,6 +11,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 from shiny import render, reactive, ui
 import logging
+import io
 from datetime import datetime
 
 from ..data.cache import get_cached_or_download, get_cache_info
@@ -140,66 +141,114 @@ def server(input, output, session):
 
         return get_recent_trends(df, months=months, categories=categories)
 
+    # ===== NEW ENHANCED METRIC CARDS =====
+
     @output
     @render.ui
-    def recent_summary_cards():
-        """Display summary cards for recent trends."""
+    def metric_current_inflation():
+        """Display current inflation rate metric."""
         df = cpi_data.get()
         if df is None:
             return ui.p("Loading...")
 
-        # Get latest values for All-items
         latest = get_latest_inflation_rate(df, "All-items")
 
         return ui.div(
-            ui.div(
-                ui.div("Current Inflation", class_="metric-label"),
-                ui.div(format_percentage(latest['yoy_change'], decimals=2), class_="metric-value"),
-                ui.div(
-                    format_change_with_indicator(latest['mom_change']),
-                    " vs last month",
-                    class_="metric-change"
-                ),
-                class_="metric-card"
-            ),
+            ui.div("Current Inflation (YoY)", class_="metric-label"),
+            ui.div(format_percentage(latest['yoy_change'], decimals=1), class_="metric-value"),
+            ui.div(format_date(latest['date']), class_="metric-change", style="font-size: 11px;"),
+            class_="metric-card"
         )
 
     @output
     @render.ui
-    def recent_latest_values():
-        """Display latest values for selected categories."""
+    def metric_mom_change():
+        """Display month-over-month change."""
         df = cpi_data.get()
-        recent_data = get_recent_data()
-
-        if df is None or recent_data is None:
+        if df is None:
             return ui.p("Loading...")
 
-        categories = list(input.recent_categories())
-        if not categories:
-            return None
+        latest = get_latest_inflation_rate(df, "All-items")
 
-        cards = []
-        for category in categories[:3]:  # Show up to 3 categories
-            if category in df['category'].values:
-                latest = get_latest_inflation_rate(df, category)
-                cards.append(
-                    ui.div(
-                        ui.div(category, class_="metric-label"),
-                        ui.div(
-                            format_percentage(latest['yoy_change'], decimals=2),
-                            class_="metric-value",
-                            style="font-size: 18px;"
-                        ),
-                        class_="metric-card"
-                    )
-                )
+        color = "positive" if latest['mom_change'] > 0 else "negative" if latest['mom_change'] < 0 else "neutral"
 
-        return ui.div(*cards)
+        return ui.div(
+            ui.div("Last Month Change", class_="metric-label"),
+            ui.div(
+                format_change_with_indicator(latest['mom_change']),
+                class_=f"metric-value {color}",
+                style="font-size: 20px;"
+            ),
+            ui.div("Month-over-Month", class_="metric-change", style="font-size: 11px;"),
+            class_="metric-card"
+        )
+
+    @output
+    @render.ui
+    def metric_trend_direction():
+        """Display trend direction (3-month average)."""
+        df = cpi_data.get()
+        if df is None:
+            return ui.p("Loading...")
+
+        # Get All-items data
+        all_items = df[df['category'] == 'All-items'].sort_values('date').tail(4)
+
+        if len(all_items) < 4:
+            return ui.div("Insufficient data", class_="metric-card")
+
+        # Calculate trend (3-month average vs previous period)
+        recent_avg = all_items.tail(3)['yoy_change'].mean()
+        previous_avg = all_items.head(3)['yoy_change'].mean()
+        trend = recent_avg - previous_avg
+
+        trend_text = "Rising" if trend > 0.1 else "Falling" if trend < -0.1 else "Stable"
+        color = "positive" if trend > 0.1 else "negative" if trend < -0.1 else "neutral"
+        arrow = "↑" if trend > 0.1 else "↓" if trend < -0.1 else "→"
+
+        return ui.div(
+            ui.div("3-Month Trend", class_="metric-label"),
+            ui.div(f"{arrow} {trend_text}", class_=f"metric-value {color}", style="font-size: 20px;"),
+            ui.div(format_percentage(trend, decimals=2, include_sign=True), class_="metric-change"),
+            class_="metric-card"
+        )
+
+    @output
+    @render.ui
+    def metric_acceleration():
+        """Display inflation acceleration/deceleration."""
+        df = cpi_data.get()
+        if df is None:
+            return ui.p("Loading...")
+
+        # Get All-items recent data
+        all_items = df[df['category'] == 'All-items'].sort_values('date').tail(3)
+
+        if len(all_items) < 3:
+            return ui.div("Insufficient data", class_="metric-card")
+
+        # Calculate acceleration (change in YoY rate)
+        current_yoy = all_items.iloc[-1]['yoy_change']
+        previous_yoy = all_items.iloc[-2]['yoy_change']
+        acceleration = current_yoy - previous_yoy
+
+        accel_text = "Accelerating" if acceleration > 0.1 else "Decelerating" if acceleration < -0.1 else "Steady"
+        color = "positive" if acceleration < -0.1 else "negative" if acceleration > 0.1 else "neutral"
+
+        return ui.div(
+            ui.div("Inflation Momentum", class_="metric-label"),
+            ui.div(accel_text, class_=f"metric-value {color}", style="font-size: 18px;"),
+            ui.div(
+                format_percentage(acceleration, decimals=2, include_sign=True) + " vs prev month",
+                class_="metric-change"
+            ),
+            class_="metric-card"
+        )
 
     @output
     @render.ui
     def recent_yoy_plot():
-        """Plot year-over-year inflation trends."""
+        """Plot year-over-year inflation trends with enhanced features."""
         recent_data = get_recent_data()
         if recent_data is None or len(recent_data) == 0:
             return ui.p("No data available")
@@ -209,61 +258,187 @@ def server(input, output, session):
             x='date',
             y='yoy_change',
             color='category',
-            title='Year-over-Year Inflation Rate (%)',
-            labels={'yoy_change': 'YoY Change (%)', 'date': 'Date', 'category': 'Category'}
+            labels={'yoy_change': 'YoY Inflation (%)', 'date': 'Date', 'category': 'Category'}
         )
+
+        # Add 2% inflation target line if requested
+        if input.show_target_line():
+            fig.add_hline(
+                y=2.0,
+                line_dash="dash",
+                line_color="gray",
+                annotation_text="Bank of Canada 2% Target",
+                annotation_position="right"
+            )
 
         fig.update_layout(
             hovermode='x unified',
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            xaxis_title="Date",
-            yaxis_title="YoY Inflation (%)",
-            height=400
+            xaxis_title="",
+            yaxis_title="Year-over-Year Inflation (%)",
+            height=450,
+            margin=dict(t=20, b=40)
         )
 
         return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
     @output
     @render.ui
-    def recent_mom_plot():
-        """Plot month-over-month changes."""
+    def inflation_acceleration_plot():
+        """Plot inflation acceleration/deceleration (change in YoY rate)."""
         recent_data = get_recent_data()
         if recent_data is None or len(recent_data) == 0:
             return ui.p("No data available")
 
-        fig = px.line(
-            recent_data,
-            x='date',
-            y='mom_change',
-            color='category',
-            title='Month-over-Month CPI Change (%)',
-            labels={'mom_change': 'MoM Change (%)', 'date': 'Date', 'category': 'Category'}
-        )
+        # Calculate acceleration for each category
+        accel_data = []
+        for category in recent_data['category'].unique():
+            cat_data = recent_data[recent_data['category'] == category].sort_values('date')
+            cat_data = cat_data.copy()
+            cat_data['acceleration'] = cat_data['yoy_change'].diff()
+            accel_data.append(cat_data)
+
+        accel_df = pd.concat(accel_data, ignore_index=True)
+
+        fig = go.Figure()
+
+        for category in accel_df['category'].unique():
+            cat_data = accel_df[accel_df['category'] == category]
+
+            # Create bar chart with conditional coloring
+            colors = ['red' if x > 0 else 'green' for x in cat_data['acceleration']]
+
+            fig.add_trace(go.Bar(
+                x=cat_data['date'],
+                y=cat_data['acceleration'],
+                name=category,
+                marker_color=colors if category == 'All-items' else None,
+                opacity=0.7
+            ))
 
         fig.update_layout(
+            yaxis_title="Change in YoY Inflation (percentage points)",
+            xaxis_title="",
             hovermode='x unified',
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            xaxis_title="Date",
-            yaxis_title="MoM Change (%)",
-            height=400
+            height=350,
+            margin=dict(t=20, b=40),
+            showlegend=len(accel_df['category'].unique()) > 1
+        )
+
+        fig.add_hline(y=0, line_dash="solid", line_color="black", line_width=1)
+
+        return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
+
+    @output
+    @render.ui
+    def rolling_averages_plot():
+        """Plot rolling averages for All-items inflation."""
+        df = cpi_data.get()
+        if df is None:
+            return ui.p("Loading...")
+
+        # Get All-items data for the recent period
+        months = input.recent_months()
+        all_items = df[df['category'] == 'All-items'].copy()
+        all_items = all_items.sort_values('date')
+
+        # Get recent data
+        cutoff_date = all_items['date'].max() - pd.DateOffset(months=months)
+        all_items = all_items[all_items['date'] >= cutoff_date]
+
+        fig = go.Figure()
+
+        # Add YoY line
+        fig.add_trace(go.Scatter(
+            x=all_items['date'],
+            y=all_items['yoy_change'],
+            name='YoY (Monthly)',
+            line=dict(color='lightgray', width=1),
+            opacity=0.5
+        ))
+
+        # Add rolling averages
+        fig.add_trace(go.Scatter(
+            x=all_items['date'],
+            y=all_items['yoy_change_rolling_3m'],
+            name='3-Month Average',
+            line=dict(color='blue', width=2)
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=all_items['date'],
+            y=all_items['yoy_change_rolling_6m'],
+            name='6-Month Average',
+            line=dict(color='orange', width=2)
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=all_items['date'],
+            y=all_items['yoy_change_rolling_12m'],
+            name='12-Month Average',
+            line=dict(color='red', width=2, dash='dash')
+        ))
+
+        fig.update_layout(
+            yaxis_title="Inflation Rate (%)",
+            xaxis_title="",
+            hovermode='x unified',
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            height=350,
+            margin=dict(t=20, b=40)
         )
 
         return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
     @output
-    @render.data_frame
-    def recent_data_table():
-        """Display recent data in table format."""
-        recent_data = get_recent_data()
-        if recent_data is None:
-            return None
+    @render.ui
+    def category_heatmap():
+        """Create heatmap of recent inflation by category."""
+        df = cpi_data.get()
+        if df is None:
+            return ui.p("Loading...")
 
-        # Select and format columns
-        table_data = recent_data[['date', 'category', 'value', 'mom_change', 'yoy_change']].copy()
-        table_data['date'] = table_data['date'].apply(format_date_short)
-        table_data.columns = ['Date', 'Category', 'CPI', 'MoM %', 'YoY %']
+        # Get last 12 months of data for key categories
+        max_date = df['date'].max()
+        cutoff_date = max_date - pd.DateOffset(months=12)
 
-        return render.DataGrid(table_data, width="100%", height="400px")
+        key_categories = [
+            "All-items", "Food", "Shelter", "Transportation", "Gasoline",
+            "Health and personal care", "Clothing and footwear",
+            "Household operations, furnishings and equipment"
+        ]
+
+        recent = df[
+            (df['date'] >= cutoff_date) &
+            (df['category'].isin(key_categories))
+        ].copy()
+
+        # Pivot to wide format for heatmap
+        heatmap_data = recent.pivot(index='category', columns='date', values='yoy_change')
+
+        # Sort categories by most recent inflation rate
+        latest_values = heatmap_data.iloc[:, -1].sort_values(ascending=False)
+        heatmap_data = heatmap_data.loc[latest_values.index]
+
+        fig = go.Figure(data=go.Heatmap(
+            z=heatmap_data.values,
+            x=[d.strftime('%b %Y') for d in heatmap_data.columns],
+            y=heatmap_data.index,
+            colorscale='RdYlGn_r',
+            zmid=2.0,  # Center at 2% target
+            colorbar=dict(title="YoY %"),
+            hovertemplate='%{y}<br>%{x}<br>%{z:.1f}%<extra></extra>'
+        ))
+
+        fig.update_layout(
+            xaxis_title="",
+            yaxis_title="",
+            height=300,
+            margin=dict(t=10, b=40, l=200, r=40)
+        )
+
+        return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
     # ===== HISTORICAL TAB =====
 
@@ -705,3 +880,90 @@ def server(input, output, session):
         )
 
         return csv_data
+
+    # ===== DATA TABLE TAB =====
+
+    @reactive.Calc
+    def get_table_data():
+        """Get data formatted for wide-format table display."""
+        df = cpi_data.get()
+        if df is None:
+            return None
+
+        # Apply date range filter
+        date_range = input.table_date_range()
+        if date_range:
+            start_date = pd.to_datetime(date_range[0])
+            end_date = pd.to_datetime(date_range[1])
+            df = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
+
+        # Apply category filter
+        if input.table_categories() == "key":
+            # Define key categories
+            key_categories = [
+                "All-items",
+                "Food",
+                "Shelter",
+                "Transportation",
+                "Gasoline",
+                "Health and personal care",
+                "Recreation, education and reading",
+                "Clothing and footwear",
+                "Household operations, furnishings and equipment",
+                "Alcoholic beverages, tobacco products and recreational cannabis"
+            ]
+            df = df[df['category'].isin(key_categories)]
+
+        # Select value column based on type
+        value_type = input.table_value_type()
+        if value_type == "cpi":
+            value_col = 'value'
+        elif value_type == "yoy":
+            value_col = 'yoy_change'
+        else:  # mom
+            value_col = 'mom_change'
+
+        # Pivot to wide format: categories as rows, dates as columns
+        wide_df = df.pivot(index='category', columns='date', values=value_col)
+
+        # Format column names as YYYY-MM
+        wide_df.columns = [col.strftime('%Y-%m') for col in wide_df.columns]
+
+        # Reset index to make category a column
+        wide_df = wide_df.reset_index()
+
+        return wide_df
+
+    @output
+    @render.data_frame
+    def wide_format_table():
+        """Display data in wide format (categories as rows, dates as columns)."""
+        table_data = get_table_data()
+        if table_data is None or len(table_data) == 0:
+            return None
+
+        # Round numeric columns to 2 decimal places
+        numeric_cols = table_data.select_dtypes(include=[np.number]).columns
+        for col in numeric_cols:
+            table_data[col] = table_data[col].round(2)
+
+        return render.DataGrid(
+            table_data,
+            width="100%",
+            height="600px",
+            filters=True
+        )
+
+    @output
+    @render.download(filename="cpi_table_data.csv")
+    def download_table_csv():
+        """Download wide-format table as CSV."""
+        table_data = get_table_data()
+        if table_data is None:
+            return ""
+
+        # Convert to CSV
+        csv_buffer = io.StringIO()
+        table_data.to_csv(csv_buffer, index=False)
+
+        return csv_buffer.getvalue()

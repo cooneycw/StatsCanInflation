@@ -48,44 +48,76 @@ def create_recent_trends_tab():
         "Recent Trends",
         ui.layout_sidebar(
             ui.sidebar(
-                ui.h4("Display Options"),
+                ui.h4("Date Range"),
                 ui.input_slider(
                     "recent_months",
-                    "Number of months to display:",
+                    "Months to display:",
                     min=6,
-                    max=36,
+                    max=60,
                     value=24,
                     step=6
                 ),
+                ui.hr(),
+                ui.h4("Categories"),
                 ui.input_checkbox_group(
                     "recent_categories",
-                    "Categories to display:",
+                    "Select categories:",
                     choices={
-                        "All-items": "All-items (Overall CPI)",
+                        "All-items": "All-items",
                         "Food": "Food",
                         "Shelter": "Shelter",
                         "Transportation": "Transportation",
                         "Gasoline": "Gasoline",
-                        "Health and personal care": "Health and personal care",
+                        "Health and personal care": "Health",
+                        "Clothing and footwear": "Clothing",
                     },
-                    selected=["All-items", "Food", "Shelter", "Transportation"]
+                    selected=["All-items", "Food", "Shelter"]
+                ),
+                ui.hr(),
+                ui.input_checkbox(
+                    "show_target_line",
+                    "Show 2% inflation target",
+                    value=True
                 ),
                 width=300
             ),
-            ui.h3("Recent Inflation Trends"),
+            ui.h3("Canadian Inflation Dashboard"),
+
+            # Key Metrics Row
             ui.row(
-                ui.column(6, ui.output_ui("recent_summary_cards")),
-                ui.column(6, ui.output_ui("recent_latest_values")),
+                ui.column(3, ui.output_ui("metric_current_inflation")),
+                ui.column(3, ui.output_ui("metric_mom_change")),
+                ui.column(3, ui.output_ui("metric_trend_direction")),
+                ui.column(3, ui.output_ui("metric_acceleration")),
             ),
+
             ui.hr(),
-            ui.h4("Year-over-Year Inflation Trends"),
-            ui.output_plot("recent_yoy_plot", height="400px"),
+
+            # Main Inflation Chart
+            ui.h4("Year-over-Year Inflation Rate"),
+            ui.output_ui("recent_yoy_plot"),
+
             ui.hr(),
-            ui.h4("Month-over-Month Changes"),
-            ui.output_plot("recent_mom_plot", height="400px"),
+
+            # Two-column layout for additional charts
+            ui.row(
+                ui.column(
+                    6,
+                    ui.h4("Inflation Acceleration/Deceleration"),
+                    ui.output_ui("inflation_acceleration_plot"),
+                ),
+                ui.column(
+                    6,
+                    ui.h4("Rolling Averages (All-items)"),
+                    ui.output_ui("rolling_averages_plot"),
+                ),
+            ),
+
             ui.hr(),
-            ui.h4("Recent Data Table"),
-            ui.output_data_frame("recent_data_table"),
+
+            # Category Heatmap
+            ui.h4("Recent Inflation by Category (Last 12 Months)"),
+            ui.output_ui("category_heatmap"),
         )
     )
 
@@ -235,12 +267,58 @@ def create_custom_analysis_tab():
     )
 
 
+def create_data_table_tab():
+    """Create the Data Table tab with wide-format view."""
+    return ui.nav_panel(
+        "Data Table",
+        ui.layout_sidebar(
+            ui.sidebar(
+                ui.h4("Table Options"),
+                ui.input_radio_buttons(
+                    "table_value_type",
+                    "Show values as:",
+                    choices={
+                        "cpi": "CPI Index Values",
+                        "yoy": "Year-over-Year %",
+                        "mom": "Month-over-Month %"
+                    },
+                    selected="yoy"
+                ),
+                ui.hr(),
+                ui.input_date_range(
+                    "table_date_range",
+                    "Date Range:",
+                    start=None,  # Will be set in server
+                    end=None,
+                ),
+                ui.hr(),
+                ui.input_select(
+                    "table_categories",
+                    "Category filter:",
+                    choices={
+                        "key": "Key Categories Only",
+                        "all": "All Categories"
+                    },
+                    selected="key"
+                ),
+                ui.hr(),
+                ui.download_button("download_table_csv", "Download as CSV"),
+                width=300
+            ),
+            ui.h3("CPI Data Table (Wide Format)"),
+            ui.p("Categories as rows, dates as columns - matches original Statistics Canada format"),
+            ui.output_data_frame("wide_format_table"),
+        )
+    )
+
+
 # Main UI definition
 app_ui = ui.page_navbar(
     create_recent_trends_tab(),
     create_historical_tab(),
     create_category_breakdown_tab(),
     create_custom_analysis_tab(),
+    create_data_table_tab(),
     title="Statistics Canada Inflation Analysis",
     id="main_navbar",
     fillable=True,
