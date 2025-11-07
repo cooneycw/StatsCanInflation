@@ -1,0 +1,14 @@
+name: StatsCanInflation
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.10
+  - pip
+
+# Note: This file documents the conda environment.
+# After creating the environment with: conda env create -f environment.yml
+# Install Python packages using uv:
+#   conda activate StatsCanInflation
+#   uv pip install -e .
+#   uv pip install -e ".[dev]"  # For development dependencies

@@ -1,0 +1,66 @@
+# Test files
+test_*.py
+*_test.py
+tests/
+pytest.ini
+.pytest_cache/
+
+# Development files
+debug_*.py
+explain_*.py
+scratch_*.py
+explore_*.py
+
+# Documentation (except README)
+*.md
+!README.md
+docs/
+
+# Local data and cache
+Data/
+*.csv
+*.xlsx
+*.xls
+cache/
+
+# Environment files
+.env
+.env.local
+environment.yml
+
+# Version control
+.git/
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg-info/
+dist/
+build/
+
+# Jupyter
+*.ipynb
+.ipynb_checkpoints/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Other
+*.tmp
+*.bak
