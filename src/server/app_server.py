@@ -10,6 +10,7 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from shiny import render, reactive, ui
+from htmltools import HTML
 import logging
 import io
 from datetime import datetime
@@ -286,7 +287,7 @@ def server(input, output, session):
             margin=dict(t=20, b=40)
         )
 
-        return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
+        return HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
     @output
     @render.ui
@@ -334,7 +335,7 @@ def server(input, output, session):
 
         fig.add_hline(y=0, line_dash="solid", line_color="black", line_width=1)
 
-        return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
+        return HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
     @output
     @render.ui
@@ -395,7 +396,7 @@ def server(input, output, session):
             margin=dict(t=20, b=40)
         )
 
-        return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
+        return HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
     @output
     @render.ui
@@ -444,7 +445,7 @@ def server(input, output, session):
             margin=dict(t=10, b=40, l=200, r=40)
         )
 
-        return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
+        return HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
     # ===== HISTORICAL TAB =====
 
@@ -538,7 +539,7 @@ def server(input, output, session):
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
 
-        return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
+        return HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
     @output
     @render.ui
@@ -569,7 +570,7 @@ def server(input, output, session):
 
         fig.add_hline(y=2.0, line_dash="dash", line_color="gray", annotation_text="2% Target")
 
-        return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
+        return HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
     @output
     @render.ui
@@ -617,7 +618,7 @@ def server(input, output, session):
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
 
-        return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
+        return HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
     # ===== CATEGORY BREAKDOWN TAB =====
 
@@ -706,7 +707,7 @@ def server(input, output, session):
                 height=max(400, len(breakdown) * 25)
             )
 
-        return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
+        return HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
     @output
     @render.data_frame
@@ -759,7 +760,7 @@ def server(input, output, session):
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
 
-        return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
+        return HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
     # ===== CUSTOM ANALYSIS TAB =====
 
@@ -828,7 +829,7 @@ def server(input, output, session):
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
 
-        return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
+        return HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
     @output
     @render.ui
