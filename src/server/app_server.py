@@ -42,38 +42,26 @@ logger = logging.getLogger(__name__)
 def server(input, output, session):
     """Main server function for the Shiny app."""
 
+    # ===== INITIAL DATA LOADING =====
+    # Load data eagerly when session starts to ensure charts display immediately
+    logger.info("Loading initial CPI data...")
+    try:
+        initial_df = get_cached_or_download(force_refresh=False)
+        initial_df = add_all_inflation_metrics(initial_df)
+        logger.info(f"Loaded {len(initial_df)} data points")
+    except Exception as e:
+        logger.error(f"Failed to load initial data: {e}")
+        initial_df = None
+
     # ===== REACTIVE VALUES =====
 
     # Store the CPI data
-    cpi_data = reactive.Value(None)
+    cpi_data = reactive.Value(initial_df)
 
     # Track when data was last loaded
-    data_load_time = reactive.Value(None)
-
-    # Track if this is the first load
-    initial_load_complete = reactive.Value(False)
+    data_load_time = reactive.Value(datetime.now() if initial_df is not None else None)
 
     # ===== DATA LOADING =====
-
-    @reactive.Effect
-    def load_initial_data():
-        """Load data on app startup."""
-        if not initial_load_complete.get():
-            logger.info("Loading initial CPI data...")
-            try:
-                df = get_cached_or_download(force_refresh=False)
-                df = add_all_inflation_metrics(df)
-                cpi_data.set(df)
-                data_load_time.set(datetime.now())
-                initial_load_complete.set(True)
-                logger.info(f"Loaded {len(df)} data points")
-            except Exception as e:
-                logger.error(f"Failed to load initial data: {e}")
-                ui.notification_show(
-                    f"Error loading data: {str(e)}",
-                    type="error",
-                    duration=10
-                )
 
     @reactive.Effect
     @reactive.event(input.refresh_data)
@@ -287,7 +275,15 @@ def server(input, output, session):
             margin=dict(t=20, b=40)
         )
 
-        return HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
+        # Configure plotly to avoid WebGL rendering issues
+        config = {
+            'responsive': True,
+            'displayModeBar': True,
+            'displaylogo': False,
+            'modeBarButtonsToRemove': ['lasso2d', 'select2d']
+        }
+
+        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
 
     @output
     @render.ui
@@ -335,7 +331,14 @@ def server(input, output, session):
 
         fig.add_hline(y=0, line_dash="solid", line_color="black", line_width=1)
 
-        return HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
+        config = {
+            'responsive': True,
+            'displayModeBar': True,
+            'displaylogo': False,
+            'modeBarButtonsToRemove': ['lasso2d', 'select2d']
+        }
+
+        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
 
     @output
     @render.ui
@@ -396,37 +399,43 @@ def server(input, output, session):
             margin=dict(t=20, b=40)
         )
 
-        return HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
+        config = {
+            'responsive': True,
+            'displayModeBar': True,
+            'displaylogo': False,
+            'modeBarButtonsToRemove': ['lasso2d', 'select2d']
+        }
+
+        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
 
     @output
     @render.ui
     def category_heatmap():
-        """Create heatmap of recent inflation by category."""
+        """Create heatmap of recent inflation by ALL categories."""
         df = cpi_data.get()
         if df is None:
             return ui.p("Loading...")
 
-        # Get last 12 months of data for key categories
+        # Get last 12 months of data for ALL categories
         max_date = df['date'].max()
         cutoff_date = max_date - pd.DateOffset(months=12)
 
-        key_categories = [
-            "All-items", "Food", "Shelter", "Transportation", "Gasoline",
-            "Health and personal care", "Clothing and footwear",
-            "Household operations, furnishings and equipment"
-        ]
+        # Get all unique categories
+        all_categories = df['category'].unique().tolist()
+
+        # Sort categories using our standard ordering
+        sorted_categories = sort_categories(all_categories)
 
         recent = df[
             (df['date'] >= cutoff_date) &
-            (df['category'].isin(key_categories))
+            (df['category'].isin(sorted_categories))
         ].copy()
 
         # Pivot to wide format for heatmap
         heatmap_data = recent.pivot(index='category', columns='date', values='yoy_change')
 
-        # Sort categories by most recent inflation rate
-        latest_values = heatmap_data.iloc[:, -1].sort_values(ascending=False)
-        heatmap_data = heatmap_data.loc[latest_values.index]
+        # Reorder rows by sorted categories (reversed for bottom-to-top display)
+        heatmap_data = heatmap_data.reindex(sorted_categories[::-1])
 
         fig = go.Figure(data=go.Heatmap(
             z=heatmap_data.values,
@@ -438,14 +447,24 @@ def server(input, output, session):
             hovertemplate='%{y}<br>%{x}<br>%{z:.1f}%<extra></extra>'
         ))
 
+        # Calculate height based on number of categories (at least 15px per category)
+        height = max(400, len(sorted_categories) * 15)
+
         fig.update_layout(
             xaxis_title="",
             yaxis_title="",
-            height=300,
-            margin=dict(t=10, b=40, l=200, r=40)
+            height=height,
+            margin=dict(t=10, b=40, l=250, r=40)
         )
 
-        return HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
+        config = {
+            'responsive': True,
+            'displayModeBar': True,
+            'displaylogo': False,
+            'modeBarButtonsToRemove': ['lasso2d', 'select2d']
+        }
+
+        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
 
     # ===== HISTORICAL TAB =====
 
@@ -539,7 +558,14 @@ def server(input, output, session):
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
 
-        return HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
+        config = {
+            'responsive': True,
+            'displayModeBar': True,
+            'displaylogo': False,
+            'modeBarButtonsToRemove': ['lasso2d', 'select2d']
+        }
+
+        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
 
     @output
     @render.ui
@@ -618,7 +644,76 @@ def server(input, output, session):
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
 
-        return HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
+        config = {
+            'responsive': True,
+            'displayModeBar': True,
+            'displaylogo': False,
+            'modeBarButtonsToRemove': ['lasso2d', 'select2d']
+        }
+
+        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
+
+    # ===== DETAILED HEATMAP TAB =====
+
+    @output
+    @render.ui
+    def detailed_category_heatmap():
+        """Create detailed heatmap of recent inflation by ALL categories."""
+        df = cpi_data.get()
+        if df is None:
+            return ui.p("Loading...")
+
+        # Get months from input
+        months = input.heatmap_months()
+        max_date = df['date'].max()
+        cutoff_date = max_date - pd.DateOffset(months=months)
+
+        # Get all unique categories
+        all_categories = df['category'].unique().tolist()
+
+        # Sort categories using our standard ordering
+        sorted_categories = sort_categories(all_categories)
+
+        # Filter data
+        recent = df[
+            (df['date'] >= cutoff_date) &
+            (df['category'].isin(sorted_categories))
+        ].copy()
+
+        # Pivot to wide format for heatmap
+        heatmap_data = recent.pivot(index='category', columns='date', values='yoy_change')
+
+        # Reorder rows by sorted categories (reversed for bottom-to-top display)
+        heatmap_data = heatmap_data.reindex(sorted_categories[::-1])
+
+        fig = go.Figure(data=go.Heatmap(
+            z=heatmap_data.values,
+            x=[d.strftime('%b %Y') for d in heatmap_data.columns],
+            y=heatmap_data.index,
+            colorscale='RdYlGn_r',
+            zmid=2.0,  # Center at 2% target
+            colorbar=dict(title="YoY %"),
+            hovertemplate='%{y}<br>%{x}<br>%{z:.1f}%<extra></extra>'
+        ))
+
+        # Calculate height based on number of categories (at least 20px per category)
+        height = max(600, len(sorted_categories) * 20)
+
+        fig.update_layout(
+            xaxis_title="",
+            yaxis_title="",
+            height=height,
+            margin=dict(t=10, b=40, l=250, r=40)
+        )
+
+        config = {
+            'responsive': True,
+            'displayModeBar': True,
+            'displaylogo': False,
+            'modeBarButtonsToRemove': ['lasso2d', 'select2d']
+        }
+
+        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
 
     # ===== CATEGORY BREAKDOWN TAB =====
 
@@ -707,7 +802,14 @@ def server(input, output, session):
                 height=max(400, len(breakdown) * 25)
             )
 
-        return HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
+        config = {
+            'responsive': True,
+            'displayModeBar': True,
+            'displaylogo': False,
+            'modeBarButtonsToRemove': ['lasso2d', 'select2d']
+        }
+
+        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
 
     @output
     @render.data_frame
@@ -760,7 +862,14 @@ def server(input, output, session):
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
 
-        return HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
+        config = {
+            'responsive': True,
+            'displayModeBar': True,
+            'displaylogo': False,
+            'modeBarButtonsToRemove': ['lasso2d', 'select2d']
+        }
+
+        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
 
     # ===== CUSTOM ANALYSIS TAB =====
 
@@ -829,7 +938,14 @@ def server(input, output, session):
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
 
-        return HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
+        config = {
+            'responsive': True,
+            'displayModeBar': True,
+            'displaylogo': False,
+            'modeBarButtonsToRemove': ['lasso2d', 'select2d']
+        }
+
+        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
 
     @output
     @render.ui
@@ -934,6 +1050,12 @@ def server(input, output, session):
     # ===== DATA TABLE TAB =====
 
     @reactive.Effect
+    @reactive.event(input.reset_table_focus)
+    def reset_table_focus():
+        """Reset the table focus filter to show all categories."""
+        ui.update_select("table_focus_filter", selected="all")
+
+    @reactive.Effect
     def populate_table_date_dropdowns():
         """Populate date dropdowns with available dates in yyyy-mm format."""
         df = cpi_data.get()
@@ -1007,54 +1129,107 @@ def server(input, output, session):
         # Sort by category using the custom ordering
         wide_df = wide_df.sort_values('category').reset_index(drop=True)
 
+        # Apply letter range filter
+        focus_filter = input.table_focus_filter()
+        if focus_filter and focus_filter != "all":
+            from ..utils.formatting import PRIORITY_CATEGORIES
+
+            # Define letter ranges
+            letter_ranges = {
+                "a-c": ("A", "C"),
+                "d-f": ("D", "F"),
+                "g-i": ("G", "I"),
+                "j-l": ("J", "L"),
+                "m-o": ("M", "O"),
+                "p-r": ("P", "R"),
+                "s-t": ("S", "T"),
+                "u-z": ("U", "Z")
+            }
+
+            if focus_filter in letter_ranges:
+                start_letter, end_letter = letter_ranges[focus_filter]
+
+                # Filter function to check if category is in range
+                def in_letter_range(category):
+                    # Always include priority categories
+                    if category in PRIORITY_CATEGORIES:
+                        return True
+                    # Check if first letter is in range
+                    first_letter = category[0].upper()
+                    return start_letter <= first_letter <= end_letter
+
+                # Apply filter
+                wide_df = wide_df[wide_df['category'].apply(in_letter_range)].reset_index(drop=True)
+
         return wide_df
 
     @output
-    @render.data_frame
+    @render.ui
     def wide_format_table():
         """Display data in wide format (categories as rows, dates as columns)."""
         table_data = get_table_data()
         if table_data is None or len(table_data) == 0:
-            return None
+            return ui.p("No data available")
 
         # Round numeric columns to 1 decimal place for better readability
         numeric_cols = table_data.select_dtypes(include=[np.number]).columns
         for col in numeric_cols:
             table_data[col] = table_data[col].round(1)
 
-        # Apply row styling using pandas Styler
+        # Build HTML table with right-aligned numeric columns
         from ..utils.formatting import PRIORITY_CATEGORIES
 
-        def highlight_rows(row):
-            """Apply background color based on category."""
+        # Create header row
+        header_cells = []
+        for col in table_data.columns:
+            if col == 'category':
+                header_cells.append(f'<th style="text-align: left; position: sticky; left: 0; background-color: #f8f9fa; z-index: 10; padding: 8px; border-bottom: 2px solid #dee2e6;">{col}</th>')
+            else:
+                # Right-align date headers
+                header_cells.append(f'<th style="text-align: right; padding: 8px; border-bottom: 2px solid #dee2e6; white-space: nowrap;">{col}</th>')
+
+        header_html = f'<tr>{"".join(header_cells)}</tr>'
+
+        # Create data rows
+        rows_html = []
+        for idx, row in table_data.iterrows():
             category = row['category']
 
+            # Determine row background color
             if category in PRIORITY_CATEGORIES:
-                # Priority categories get light blue background
-                return ['background-color: #e3f2fd'] * len(row)
+                bg_color = "#e3f2fd"  # Light blue for priority categories
             else:
-                # Get the row's position in the DataFrame
-                row_idx = row.name
-                # Count non-priority rows before this one
-                non_priority_count = sum(1 for i in range(row_idx)
-                                        if table_data.iloc[i]['category'] not in PRIORITY_CATEGORIES)
+                # Alternating colors for non-priority
+                non_priority_idx = idx - len([c for c in table_data['category'][:idx] if c in PRIORITY_CATEGORIES])
+                bg_color = "#f5f5f5" if non_priority_idx % 2 == 0 else "#ffffff"
 
-                if non_priority_count % 2 == 0:
-                    # Alternating light gray
-                    return ['background-color: #f5f5f5'] * len(row)
+            cells = []
+            for col in table_data.columns:
+                value = row[col]
+                if col == 'category':
+                    # Category column - left-aligned, sticky
+                    cells.append(f'<td style="text-align: left; position: sticky; left: 0; background-color: {bg_color}; z-index: 5; padding: 8px; border-bottom: 1px solid #dee2e6; font-weight: 500;">{value}</td>')
                 else:
-                    # White (default)
-                    return [''] * len(row)
+                    # Numeric columns - right-aligned
+                    display_value = f"{value:.1f}" if pd.notna(value) else ""
+                    cells.append(f'<td style="text-align: right; padding: 8px; border-bottom: 1px solid #dee2e6;">{display_value}</td>')
 
-        # Apply styling
-        styled_df = table_data.style.apply(highlight_rows, axis=1)
+            rows_html.append(f'<tr style="background-color: {bg_color};">{"".join(cells)}</tr>')
 
-        return render.DataGrid(
-            styled_df,
-            width="100%",
-            height="600px",
-            selection_mode="none"
-        )
+        table_html = f'''
+        <div style="width: 100%; height: 600px; overflow: auto; border: 1px solid #dee2e6; border-radius: 4px;">
+            <table style="width: 100%; border-collapse: collapse; font-family: monospace; font-size: 13px;">
+                <thead style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 10;">
+                    {header_html}
+                </thead>
+                <tbody>
+                    {"".join(rows_html)}
+                </tbody>
+            </table>
+        </div>
+        '''
+
+        return HTML(table_html)
 
     @output
     @render.download(filename="cpi_table_data.csv")

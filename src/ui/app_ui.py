@@ -164,14 +164,14 @@ def create_historical_tab():
                 ui.column(12, ui.output_ui("historical_summary_stats")),
             ),
             ui.hr(),
-            ui.h4("CPI Index Over Time"),
-            ui.output_ui("historical_cpi_plot"),
-            ui.hr(),
             ui.h4("Year-over-Year Inflation Rate"),
             ui.output_ui("historical_yoy_plot"),
             ui.hr(),
             ui.h4("Cumulative Inflation Since Start of Period"),
             ui.output_ui("historical_cumulative_plot"),
+            ui.hr(),
+            ui.h4("CPI Index Over Time"),
+            ui.output_ui("historical_cpi_plot"),
         )
     )
 
@@ -282,6 +282,32 @@ def create_custom_analysis_tab():
     )
 
 
+def create_detailed_heatmap_tab():
+    """Create the Detailed Heatmap tab."""
+    return ui.nav_panel(
+        "Detailed Heatmap",
+        ui.layout_sidebar(
+            ui.sidebar(
+                ui.h4("Display Options"),
+                ui.input_slider(
+                    "heatmap_months",
+                    "Months to display:",
+                    min=3,
+                    max=24,
+                    value=12,
+                    step=3
+                ),
+                ui.hr(),
+                ui.p("Showing inflation rates for all CPI categories", class_="text-muted", style="font-size: 12px;"),
+                width=300
+            ),
+            ui.h3("Detailed Inflation Heatmap by Category"),
+            ui.p("Year-over-year inflation rates for all categories. Color scale centered at 2% (Bank of Canada target)."),
+            ui.output_ui("detailed_category_heatmap"),
+        )
+    )
+
+
 def create_data_table_tab():
     """Create the Data Table tab with wide-format view."""
     return ui.nav_panel(
@@ -314,6 +340,30 @@ def create_data_table_tab():
                     selected="2025-01"
                 ),
                 ui.hr(),
+                ui.h4("Category Focus"),
+                ui.input_select(
+                    "table_focus_filter",
+                    "Filter categories by letter:",
+                    choices={
+                        "all": "All Categories",
+                        "a-c": "A-C",
+                        "d-f": "D-F",
+                        "g-i": "G-I",
+                        "j-l": "J-L",
+                        "m-o": "M-O",
+                        "p-r": "P-R",
+                        "s-t": "S-T",
+                        "u-z": "U-Z"
+                    },
+                    selected="all"
+                ),
+                ui.input_action_button(
+                    "reset_table_focus",
+                    "Reset Filter",
+                    class_="btn-secondary btn-sm",
+                    style="width: 100%; margin-top: 10px;"
+                ),
+                ui.hr(),
                 ui.download_button("download_table_csv", "Download as CSV"),
                 width=300
             ),
@@ -329,8 +379,9 @@ def create_data_table_tab():
 app_ui = ui.page_navbar(
     create_recent_trends_tab(),
     create_historical_tab(),
-    create_category_breakdown_tab(),
-    create_custom_analysis_tab(),
+    create_detailed_heatmap_tab(),
+    # create_category_breakdown_tab(),  # Removed - replaced by detailed heatmap
+    # create_custom_analysis_tab(),  # Removed from UI but backend functions remain
     create_data_table_tab(),
     title="Statistics Canada Inflation Analysis",
     id="main_navbar",
