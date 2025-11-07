@@ -1024,8 +1024,7 @@ def server(input, output, session):
         return render.DataGrid(
             table_data,
             width="100%",
-            height="600px",
-            filters=True
+            height="600px"
         )
 
     @output
