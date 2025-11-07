@@ -14,13 +14,16 @@ import logging
 from datetime import datetime
 
 from ..data.cache import get_cached_or_download, get_cache_info
-from ..models.inflation import add_all_inflation_metrics, get_latest_inflation_rate
+from ..models.inflation import (
+    add_all_inflation_metrics,
+    get_latest_inflation_rate,
+    get_inflation_summary_stats,
+)
 from ..models.analysis import (
     get_recent_trends,
     get_historical_comparison,
     get_category_breakdown,
     get_category_trends,
-    get_inflation_summary_stats,
 )
 from ..utils.formatting import (
     format_percentage,
