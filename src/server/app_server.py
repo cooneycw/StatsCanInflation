@@ -355,6 +355,9 @@ def server(input, output, session):
         if df is None:
             return ui.p("Loading...")
 
+        # Get momentum period selection
+        momentum_period = input.base_effects_momentum()
+
         # Get recent data for All-items
         months = input.recent_months()
         all_items = df[df['category'] == 'All-items'].copy()
@@ -362,11 +365,33 @@ def server(input, output, session):
 
         # Get recent data
         cutoff_date = all_items['date'].max() - pd.DateOffset(months=months)
-        all_items_recent = all_items[all_items['date'] >= cutoff_date]
+        all_items_recent = all_items[all_items['date'] >= cutoff_date].copy()
 
-        # Project future YoY assuming zero MoM and recent average MoM
+        # Calculate momentum based on selected period
+        if momentum_period == "monthly":
+            # Use single month MoM annualized (existing annualized_mom)
+            momentum_label = "Monthly Momentum"
+            all_items_recent['current_momentum'] = all_items_recent['annualized_mom']
+            projection_assumption = "recent_average"
+        elif momentum_period == "quarterly":
+            # Use 3-month average MoM annualized
+            momentum_label = "Quarterly Momentum (3-mo avg)"
+            all_items_recent['mom_3m_avg'] = all_items_recent['mom_change'].rolling(window=3, min_periods=1).mean()
+            all_items_recent['current_momentum'] = all_items_recent['mom_3m_avg'] * 12
+            projection_assumption = "recent_average"  # Will use 3-month avg in projection
+        else:  # half_year
+            # Use 6-month average MoM annualized
+            momentum_label = "Half-Year Momentum (6-mo avg)"
+            all_items_recent['mom_6m_avg'] = all_items_recent['mom_change'].rolling(window=6, min_periods=1).mean()
+            all_items_recent['current_momentum'] = all_items_recent['mom_6m_avg'] * 12
+            projection_assumption = "recent_average"
+
+        # Recalculate base effect contribution using selected momentum
+        all_items_recent['base_effect_current'] = all_items_recent['yoy_change'] - all_items_recent['current_momentum']
+
+        # Project future YoY
         projection_zero = project_future_yoy(df, "All-items", months_ahead=3, mom_assumption="zero")
-        projection_avg = project_future_yoy(df, "All-items", months_ahead=3, mom_assumption="recent_average")
+        projection_avg = project_future_yoy(df, "All-items", months_ahead=3, mom_assumption=projection_assumption)
 
         fig = go.Figure()
 
@@ -379,11 +404,11 @@ def server(input, output, session):
             mode='lines'
         ))
 
-        # Add annualized MoM (current momentum)
+        # Add annualized momentum (using selected period)
         fig.add_trace(go.Scatter(
             x=all_items_recent['date'],
-            y=all_items_recent['annualized_mom'],
-            name='Annualized MoM (Current Momentum)',
+            y=all_items_recent['current_momentum'],
+            name=f'Annualized {momentum_label}',
             line=dict(color='#198754', width=2, dash='dot'),
             mode='lines'
         ))
@@ -391,7 +416,7 @@ def server(input, output, session):
         # Add base effect contribution as shaded area
         fig.add_trace(go.Scatter(
             x=all_items_recent['date'],
-            y=all_items_recent['base_effect_contribution'],
+            y=all_items_recent['base_effect_current'],
             name='Base Effect Contribution',
             fill='tozeroy',
             fillcolor='rgba(220, 53, 69, 0.2)',
@@ -417,7 +442,7 @@ def server(input, output, session):
             fig.add_trace(go.Scatter(
                 x=projection_avg['date'],
                 y=projection_avg['yoy_change'],
-                name='Projected YoY (at recent avg MoM)',
+                name=f'Projected YoY (at current momentum)',
                 line=dict(color='#fd7e14', width=2, dash='dash'),
                 mode='lines+markers',
                 marker=dict(size=6)
@@ -428,7 +453,7 @@ def server(input, output, session):
             xaxis_title="",
             hovermode='x unified',
             legend=dict(orientation="h", yanchor="bottom", y=-0.25, xanchor="center", x=0.5),
-            height=400,
+            height=550,  # Increased from 400 for better resolution
             margin=dict(t=10, b=80)
         )
 

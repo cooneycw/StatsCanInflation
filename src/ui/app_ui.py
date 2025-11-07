@@ -101,12 +101,22 @@ def create_recent_trends_tab():
                     value=False
                 ),
                 ui.div(
+                    ui.input_radio_buttons(
+                        "base_effects_momentum",
+                        "Momentum period:",
+                        choices={
+                            "monthly": "Monthly (noisy)",
+                            "quarterly": "Quarterly (3-month avg)",
+                            "half_year": "Half-year (6-month avg)"
+                        },
+                        selected="quarterly",
+                        inline=False
+                    ),
                     ui.p(
-                        "Base effects show when YoY inflation changes are driven by what happened 12 months ago, not current price momentum.",
+                        "Longer momentum periods smooth out volatility to show underlying trends.",
                         style="font-size: 11px; color: #6c757d; margin-top: 5px;"
                     ),
-                    style="display: none;" if True else "",
-                    id="base_effects_help"
+                    id="base_effects_options"
                 ),
                 width=300
             ),
