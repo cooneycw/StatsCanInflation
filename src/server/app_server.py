@@ -77,7 +77,11 @@ def server(input, output, session):
     def refresh_data():
         """Refresh data when user clicks refresh button."""
         logger.info("Refreshing CPI data...")
-        ui.notification_show("Downloading latest data from Statistics Canada...", duration=3)
+        ui.notification_show(
+            "Downloading latest data from Statistics Canada... (This may take 30-60 seconds)",
+            duration=5,
+            type="message"
+        )
 
         try:
             df = get_cached_or_download(force_refresh=True)
@@ -193,12 +197,12 @@ def server(input, output, session):
         return ui.div(*cards)
 
     @output
-    @render.plot
+    @render.ui
     def recent_yoy_plot():
         """Plot year-over-year inflation trends."""
         recent_data = get_recent_data()
         if recent_data is None or len(recent_data) == 0:
-            return None
+            return ui.p("No data available")
 
         fig = px.line(
             recent_data,
@@ -213,18 +217,19 @@ def server(input, output, session):
             hovermode='x unified',
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
             xaxis_title="Date",
-            yaxis_title="YoY Inflation (%)"
+            yaxis_title="YoY Inflation (%)",
+            height=400
         )
 
-        return fig
+        return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
     @output
-    @render.plot
+    @render.ui
     def recent_mom_plot():
         """Plot month-over-month changes."""
         recent_data = get_recent_data()
         if recent_data is None or len(recent_data) == 0:
-            return None
+            return ui.p("No data available")
 
         fig = px.line(
             recent_data,
@@ -239,10 +244,11 @@ def server(input, output, session):
             hovermode='x unified',
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
             xaxis_title="Date",
-            yaxis_title="MoM Change (%)"
+            yaxis_title="MoM Change (%)",
+            height=400
         )
 
-        return fig
+        return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
     @output
     @render.data_frame
@@ -325,12 +331,12 @@ def server(input, output, session):
         return ui.div(*stats_cards, style="display: flex; flex-wrap: wrap;")
 
     @output
-    @render.plot
+    @render.ui
     def historical_cpi_plot():
         """Plot historical CPI values."""
         historical_data = get_historical_data()
         if historical_data is None or len(historical_data) == 0:
-            return None
+            return ui.p("No data available")
 
         fig = px.line(
             historical_data,
@@ -346,15 +352,15 @@ def server(input, output, session):
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
 
-        return fig
+        return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
     @output
-    @render.plot
+    @render.ui
     def historical_yoy_plot():
         """Plot historical year-over-year inflation."""
         historical_data = get_historical_data()
         if historical_data is None or len(historical_data) == 0:
-            return None
+            return ui.p("No data available")
 
         fig = px.line(
             historical_data,
@@ -372,17 +378,17 @@ def server(input, output, session):
 
         fig.add_hline(y=2.0, line_dash="dash", line_color="gray", annotation_text="2% Target")
 
-        return fig
+        return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
     @output
-    @render.plot
+    @render.ui
     def historical_cumulative_plot():
         """Plot cumulative inflation from start of period."""
         historical_data = get_historical_data()
         df = cpi_data.get()
 
         if historical_data is None or len(historical_data) == 0 or df is None:
-            return None
+            return ui.p("No data available")
 
         date_range = input.historical_date_range()
         start_date = date_range[0].strftime("%Y-%m-%d") if date_range else None
@@ -397,7 +403,7 @@ def server(input, output, session):
             cumulative_data.append(cat_cumulative)
 
         if not cumulative_data:
-            return None
+            return ui.p("No data available")
 
         combined = pd.concat(cumulative_data, ignore_index=True)
 
@@ -415,7 +421,7 @@ def server(input, output, session):
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
 
-        return fig
+        return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
     # ===== CATEGORY BREAKDOWN TAB =====
 
@@ -463,12 +469,12 @@ def server(input, output, session):
         )
 
     @output
-    @render.plot
+    @render.ui
     def breakdown_bar_chart():
         """Display bar chart of category inflation rates."""
         breakdown = get_breakdown_data()
         if breakdown is None or len(breakdown) == 0:
-            return None
+            return ui.p("No data available")
 
         fig = px.bar(
             breakdown,
@@ -486,7 +492,7 @@ def server(input, output, session):
             height=max(400, len(breakdown) * 25)
         )
 
-        return fig
+        return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
     @output
     @render.data_frame
@@ -502,14 +508,14 @@ def server(input, output, session):
         return render.DataGrid(table_data, width="100%", height="400px")
 
     @output
-    @render.plot
+    @render.ui
     def breakdown_trends_plot():
         """Plot trends for top categories over last 12 months."""
         df = cpi_data.get()
         breakdown = get_breakdown_data()
 
         if df is None or breakdown is None or len(breakdown) == 0:
-            return None
+            return ui.p("No data available")
 
         # Get top 5 categories from breakdown
         top_categories = breakdown.head(5)['category'].tolist()
@@ -518,7 +524,7 @@ def server(input, output, session):
         trends = get_recent_trends(df, months=12, categories=top_categories)
 
         if len(trends) == 0:
-            return None
+            return ui.p("No data available")
 
         fig = px.line(
             trends,
@@ -534,7 +540,7 @@ def server(input, output, session):
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
 
-        return fig
+        return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
     # ===== CUSTOM ANALYSIS TAB =====
 
@@ -577,12 +583,12 @@ def server(input, output, session):
         )
 
     @output
-    @render.plot
+    @render.ui
     def custom_comparison_plot():
         """Plot custom data comparison."""
         custom_data = get_custom_data()
         if custom_data is None or len(custom_data) == 0:
-            return None
+            return ui.p("No data available")
 
         fig = px.line(
             custom_data,
@@ -598,7 +604,7 @@ def server(input, output, session):
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
 
-        return fig
+        return ui.HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
 
     @output
     @render.ui
