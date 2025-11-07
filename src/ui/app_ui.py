@@ -165,13 +165,13 @@ def create_historical_tab():
             ),
             ui.hr(),
             ui.h4("CPI Index Over Time"),
-            ui.output_plot("historical_cpi_plot", height="400px"),
+            ui.output_ui("historical_cpi_plot"),
             ui.hr(),
             ui.h4("Year-over-Year Inflation Rate"),
-            ui.output_plot("historical_yoy_plot", height="400px"),
+            ui.output_ui("historical_yoy_plot"),
             ui.hr(),
             ui.h4("Cumulative Inflation Since Start of Period"),
-            ui.output_plot("historical_cumulative_plot", height="400px"),
+            ui.output_ui("historical_cumulative_plot"),
         )
     )
 
@@ -214,13 +214,13 @@ def create_category_breakdown_tab():
             ),
             ui.hr(),
             ui.h4("Category Inflation Rates"),
-            ui.output_plot("breakdown_bar_chart", height="500px"),
+            ui.output_ui("breakdown_bar_chart"),
             ui.hr(),
             ui.h4("Detailed Category Table"),
             ui.output_data_frame("breakdown_table"),
             ui.hr(),
             ui.h4("Category Trends (Last 12 Months)"),
-            ui.output_plot("breakdown_trends_plot", height="400px"),
+            ui.output_ui("breakdown_trends_plot"),
         )
     )
 
@@ -271,7 +271,7 @@ def create_custom_analysis_tab():
             ),
             ui.hr(),
             ui.h4("Inflation Comparison"),
-            ui.output_plot("custom_comparison_plot", height="400px"),
+            ui.output_ui("custom_comparison_plot"),
             ui.hr(),
             ui.h4("Statistical Summary"),
             ui.output_ui("custom_stats_summary"),
