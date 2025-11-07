@@ -20,6 +20,8 @@ from ..models.inflation import (
     add_all_inflation_metrics,
     get_latest_inflation_rate,
     get_inflation_summary_stats,
+    project_future_yoy,
+    identify_base_effect_periods,
 )
 from ..models.analysis import (
     get_recent_trends,
@@ -302,6 +304,134 @@ def server(input, output, session):
         )
 
         # Configure plotly to avoid WebGL rendering issues
+        config = {
+            'responsive': True,
+            'displayModeBar': True,
+            'displaylogo': False,
+            'modeBarButtonsToRemove': ['lasso2d', 'select2d']
+        }
+
+        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
+
+    @output
+    @render.ui
+    def base_effects_section():
+        """Conditionally render base effects analysis section."""
+        if not input.show_base_effects():
+            return ui.div()  # Return empty div if toggle is off
+
+        recent_data = get_recent_data()
+        df = cpi_data.get()
+
+        if recent_data is None or len(recent_data) == 0 or df is None:
+            return ui.div()
+
+        # Focus on All-items for base effects (avoid clutter)
+        all_items_recent = recent_data[recent_data['category'] == 'All-items'].copy()
+
+        if len(all_items_recent) == 0:
+            return ui.div()
+
+        return ui.div(
+            ui.hr(),
+            ui.h4("Base Effects Analysis", style="margin-top: 20px;"),
+            ui.p(
+                "Base effects occur when year-over-year inflation changes due to unusual values from 12 months ago, not current price momentum. "
+                "The chart below shows actual YoY inflation vs. annualized month-over-month changes (current momentum) and projections.",
+                style="font-size: 13px; color: #6c757d; margin-bottom: 15px;"
+            ),
+            ui.output_ui("base_effects_plot"),
+            style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 15px;"
+        )
+
+    @output
+    @render.ui
+    def base_effects_plot():
+        """Plot base effects analysis with projections."""
+        if not input.show_base_effects():
+            return ui.div()
+
+        df = cpi_data.get()
+        if df is None:
+            return ui.p("Loading...")
+
+        # Get recent data for All-items
+        months = input.recent_months()
+        all_items = df[df['category'] == 'All-items'].copy()
+        all_items = all_items.sort_values('date')
+
+        # Get recent data
+        cutoff_date = all_items['date'].max() - pd.DateOffset(months=months)
+        all_items_recent = all_items[all_items['date'] >= cutoff_date]
+
+        # Project future YoY assuming zero MoM and recent average MoM
+        projection_zero = project_future_yoy(df, "All-items", months_ahead=3, mom_assumption="zero")
+        projection_avg = project_future_yoy(df, "All-items", months_ahead=3, mom_assumption="recent_average")
+
+        fig = go.Figure()
+
+        # Add actual YoY inflation
+        fig.add_trace(go.Scatter(
+            x=all_items_recent['date'],
+            y=all_items_recent['yoy_change'],
+            name='YoY Inflation (Actual)',
+            line=dict(color='#0d6efd', width=3),
+            mode='lines'
+        ))
+
+        # Add annualized MoM (current momentum)
+        fig.add_trace(go.Scatter(
+            x=all_items_recent['date'],
+            y=all_items_recent['annualized_mom'],
+            name='Annualized MoM (Current Momentum)',
+            line=dict(color='#198754', width=2, dash='dot'),
+            mode='lines'
+        ))
+
+        # Add base effect contribution as shaded area
+        fig.add_trace(go.Scatter(
+            x=all_items_recent['date'],
+            y=all_items_recent['base_effect_contribution'],
+            name='Base Effect Contribution',
+            fill='tozeroy',
+            fillcolor='rgba(220, 53, 69, 0.2)',
+            line=dict(color='#dc3545', width=1),
+            mode='lines'
+        ))
+
+        # Add zero line
+        fig.add_hline(y=0, line_dash="solid", line_color="black", line_width=0.5, opacity=0.5)
+
+        # Add projections (if available)
+        if len(projection_zero) > 0:
+            fig.add_trace(go.Scatter(
+                x=projection_zero['date'],
+                y=projection_zero['yoy_change'],
+                name='Projected YoY (if prices flat)',
+                line=dict(color='#6c757d', width=2, dash='dash'),
+                mode='lines+markers',
+                marker=dict(size=6)
+            ))
+
+        if len(projection_avg) > 0:
+            fig.add_trace(go.Scatter(
+                x=projection_avg['date'],
+                y=projection_avg['yoy_change'],
+                name='Projected YoY (at recent avg MoM)',
+                line=dict(color='#fd7e14', width=2, dash='dash'),
+                mode='lines+markers',
+                marker=dict(size=6)
+            ))
+
+        fig.update_layout(
+            yaxis_title="Inflation Rate / Base Effect Contribution (%)",
+            xaxis_title="",
+            hovermode='x unified',
+            legend=dict(orientation="h", yanchor="bottom", y=-0.25, xanchor="center", x=0.5),
+            height=400,
+            margin=dict(t=10, b=80)
+        )
+
         config = {
             'responsive': True,
             'displayModeBar': True,

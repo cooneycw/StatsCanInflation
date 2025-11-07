@@ -89,10 +89,24 @@ def create_recent_trends_tab():
                     selected=["All-items", "Food", "Shelter"]
                 ),
                 ui.hr(),
+                ui.h4("Display Options"),
                 ui.input_checkbox(
                     "show_target_line",
                     "Show 2% inflation target",
                     value=True
+                ),
+                ui.input_checkbox(
+                    "show_base_effects",
+                    "Show base effects analysis",
+                    value=False
+                ),
+                ui.div(
+                    ui.p(
+                        "Base effects show when YoY inflation changes are driven by what happened 12 months ago, not current price momentum.",
+                        style="font-size: 11px; color: #6c757d; margin-top: 5px;"
+                    ),
+                    style="display: none;" if True else "",
+                    id="base_effects_help"
                 ),
                 width=300
             ),
@@ -111,6 +125,9 @@ def create_recent_trends_tab():
             # Main Inflation Chart
             ui.h4("Year-over-Year Inflation Rate"),
             ui.output_ui("recent_yoy_plot"),
+
+            # Base Effects Analysis (conditional)
+            ui.output_ui("base_effects_section"),
 
             ui.hr(),
 
