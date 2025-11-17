@@ -540,8 +540,6 @@ app_ui = ui.page_navbar(
     id="main_navbar",
     fillable=True,
     header=ui.div(
-        # Include Plotly CDN script globally for all charts
-        ui.tags.script(src="https://cdn.plot.ly/plotly-2.26.0.min.js"),
         create_header_panel(),
         ui.tags.style("""
             .page-header {
