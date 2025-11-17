@@ -86,7 +86,7 @@ def create_recent_trends_tab():
                         "Shelter": "Shelter",
                         "Transportation": "Transportation",
                     },
-                    selected=["All-items", "Food", "Shelter"]
+                    selected=["All-items", "Goods", "Services"]
                 ),
                 ui.hr(),
                 ui.h4("Display Options"),
@@ -98,7 +98,7 @@ def create_recent_trends_tab():
                 ui.input_checkbox(
                     "show_base_effects",
                     "Show base effects analysis",
-                    value=False
+                    value=True
                 ),
                 ui.div(
                     ui.input_radio_buttons(
@@ -299,7 +299,7 @@ def create_custom_analysis_tab():
                         "Shelter": "Shelter",
                         "Transportation": "Transportation",
                     },
-                    selected=["All-items", "Food", "Shelter"]
+                    selected=["All-items", "Goods", "Services"]
                 ),
                 ui.hr(),
                 ui.h4("Export Options"),
@@ -489,6 +489,34 @@ app_ui = ui.page_navbar(
             }
             .text-right {
                 text-align: right;
+            }
+
+            /* Mobile Responsiveness */
+            @media (max-width: 768px) {
+                /* Auto-collapse sidebar on mobile for better UX */
+                .bslib-sidebar-layout > .sidebar {
+                    --_sidebar-width: 0px;
+                }
+
+                /* Ensure metric cards stack nicely */
+                .metric-card {
+                    margin-bottom: 10px;
+                }
+
+                /* Reduce padding on mobile */
+                .page-header {
+                    padding: 15px 10px;
+                }
+            }
+
+            @media (min-width: 480px) and (max-width: 768px) {
+                /* 2-column grid for metric cards on larger phones/small tablets */
+                .metric-card {
+                    width: calc(50% - 10px);
+                    display: inline-block;
+                    vertical-align: top;
+                    margin-right: 10px;
+                }
             }
         """)
     ),

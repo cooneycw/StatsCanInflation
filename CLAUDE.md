@@ -164,6 +164,64 @@ git commit -m "description"
 git push origin main
 ```
 
+## Base Effects Analysis
+
+The app includes a sophisticated base effects analysis feature to identify when year-over-year (YoY) inflation changes are driven by what happened 12 months ago rather than current price momentum.
+
+### What Are Base Effects?
+
+Base effects occur when YoY inflation changes significantly, not because current prices are changing, but because an unusual price movement from 12 months ago is "rolling off" the YoY calculation. For example:
+- If gasoline spiked 12 months ago, YoY inflation will drop when that spike rolls off, even if current prices are stable
+- If prices crashed 12 months ago, YoY inflation will rise when that crash rolls off, even without current price increases
+
+### Calculation Methodology
+
+**Core Metrics** (from `src/models/inflation.py:249-282`):
+
+1. **Annualized Month-over-Month (Annualized MoM)**
+   - Formula: `MoM change × 12`
+   - Represents current price momentum projected as an annual rate
+   - Shows what inflation would be if current MoM trends continued for a year
+
+2. **Base Effect Contribution**
+   - Formula: `YoY inflation - Annualized MoM`
+   - Positive value: YoY is higher than current momentum suggests (base effect pulling it up)
+   - Negative value: YoY is lower than current momentum suggests (base effect pulling it down)
+   - Near zero: YoY accurately reflects current price trends (minimal base effects)
+
+3. **Momentum Period Options**
+   - **Monthly**: Uses single-month MoM (noisy but responsive)
+   - **Quarterly**: Uses 3-month rolling average of MoM (default, balances smoothing and responsiveness)
+   - **Half-year**: Uses 6-month rolling average of MoM (smoothest, shows underlying trends)
+
+### Projection Features
+
+The analysis includes forward-looking projections (from `src/models/inflation.py:284-351`):
+
+1. **Zero Momentum Projection** (if prices flat)
+   - Assumes 0% MoM going forward
+   - Shows where YoY would go if prices stopped changing
+   - Reveals pure base effect impact
+
+2. **Current Momentum Projection**
+   - Uses recent average MoM (3-month or 6-month depending on momentum period selection)
+   - Shows expected YoY path if current trends continue
+   - Projects 3 months ahead by default
+
+### Implementation Location
+
+- **Calculation**: `src/models/inflation.py` - `calculate_base_effects()`, `project_future_yoy()`
+- **Visualization**: `src/server/app_server.py:318-467` - `base_effects_section()`, `base_effects_plot()`
+- **UI Toggle**: `src/ui/app_ui.py:99-120` - Checkbox to show/hide, momentum period selector
+
+### Interpretation Guide
+
+When analyzing the base effects chart:
+- **Widening gap** between YoY and momentum: Base effects are strengthening
+- **Convergence**: YoY inflation is normalizing to match current price trends
+- **Projection divergence**: Upcoming base effects will cause significant YoY changes
+- **Large base effect contribution** (shaded area): YoY inflation is mechanically driven by the base, not current conditions
+
 ## Working with Statistics Canada Data
 
 When processing the CPI CSV files:
