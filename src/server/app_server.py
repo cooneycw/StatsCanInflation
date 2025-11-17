@@ -311,7 +311,7 @@ def server(input, output, session):
             'modeBarButtonsToRemove': ['lasso2d', 'select2d']
         }
 
-        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
+        return HTML(fig.to_html(include_plotlyjs=False, config=config))
 
     @output
     @render.ui
@@ -464,7 +464,7 @@ def server(input, output, session):
             'modeBarButtonsToRemove': ['lasso2d', 'select2d']
         }
 
-        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
+        return HTML(fig.to_html(include_plotlyjs=False, config=config))
 
     @output
     @render.ui
@@ -519,7 +519,7 @@ def server(input, output, session):
             'modeBarButtonsToRemove': ['lasso2d', 'select2d']
         }
 
-        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
+        return HTML(fig.to_html(include_plotlyjs=False, config=config))
 
     @output
     @render.ui
@@ -587,7 +587,7 @@ def server(input, output, session):
             'modeBarButtonsToRemove': ['lasso2d', 'select2d']
         }
 
-        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
+        return HTML(fig.to_html(include_plotlyjs=False, config=config))
 
     @output
     @render.ui
@@ -661,7 +661,7 @@ def server(input, output, session):
             'modeBarButtonsToRemove': ['lasso2d', 'select2d']
         }
 
-        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
+        return HTML(fig.to_html(include_plotlyjs=False, config=config))
 
     # ===== HISTORICAL TAB =====
 
@@ -762,7 +762,7 @@ def server(input, output, session):
             'modeBarButtonsToRemove': ['lasso2d', 'select2d']
         }
 
-        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
+        return HTML(fig.to_html(include_plotlyjs=False, config=config))
 
     @output
     @render.ui
@@ -793,7 +793,7 @@ def server(input, output, session):
 
         fig.add_hline(y=2.0, line_dash="dash", line_color="gray", annotation_text="2% Target")
 
-        return HTML(fig.to_html(include_plotlyjs='cdn', config={'responsive': True}))
+        return HTML(fig.to_html(include_plotlyjs=False, config={'responsive': True}))
 
     @output
     @render.ui
@@ -848,7 +848,7 @@ def server(input, output, session):
             'modeBarButtonsToRemove': ['lasso2d', 'select2d']
         }
 
-        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
+        return HTML(fig.to_html(include_plotlyjs=False, config=config))
 
     # ===== DETAILED HEATMAP TAB =====
 
@@ -910,7 +910,7 @@ def server(input, output, session):
             'modeBarButtonsToRemove': ['lasso2d', 'select2d']
         }
 
-        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
+        return HTML(fig.to_html(include_plotlyjs=False, config=config))
 
     # ===== CATEGORY BREAKDOWN TAB =====
 
@@ -1006,7 +1006,7 @@ def server(input, output, session):
             'modeBarButtonsToRemove': ['lasso2d', 'select2d']
         }
 
-        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
+        return HTML(fig.to_html(include_plotlyjs=False, config=config))
 
     @output
     @render.data_frame
@@ -1066,7 +1066,7 @@ def server(input, output, session):
             'modeBarButtonsToRemove': ['lasso2d', 'select2d']
         }
 
-        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
+        return HTML(fig.to_html(include_plotlyjs=False, config=config))
 
     # ===== CUSTOM ANALYSIS TAB =====
 
@@ -1142,7 +1142,7 @@ def server(input, output, session):
             'modeBarButtonsToRemove': ['lasso2d', 'select2d']
         }
 
-        return HTML(fig.to_html(include_plotlyjs='cdn', config=config))
+        return HTML(fig.to_html(include_plotlyjs=False, config=config))
 
     @output
     @render.ui
