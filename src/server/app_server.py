@@ -300,7 +300,7 @@ def server(input, output, session):
             xaxis_title="",
             yaxis_title="Year-over-Year Inflation (%)",
             height=450,
-            margin=dict(t=20, b=40)
+            margin=dict(t=60, b=40)
         )
 
         # Configure plotly to avoid WebGL rendering issues
@@ -454,7 +454,7 @@ def server(input, output, session):
             hovermode='x unified',
             legend=dict(orientation="h", yanchor="bottom", y=-0.25, xanchor="center", x=0.5),
             height=550,  # Increased from 400 for better resolution
-            margin=dict(t=10, b=80)
+            margin=dict(t=60, b=80)
         )
 
         config = {
@@ -506,7 +506,7 @@ def server(input, output, session):
             hovermode='x unified',
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
             height=350,
-            margin=dict(t=20, b=40),
+            margin=dict(t=60, b=40),
             showlegend=len(accel_df['category'].unique()) > 1
         )
 
@@ -577,7 +577,7 @@ def server(input, output, session):
             hovermode='x unified',
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
             height=350,
-            margin=dict(t=20, b=40)
+            margin=dict(t=60, b=40)
         )
 
         config = {
@@ -651,7 +651,7 @@ def server(input, output, session):
             xaxis_title="",
             yaxis_title="",
             height=height,
-            margin=dict(t=10, b=40, l=250, r=40)
+            margin=dict(t=60, b=40, l=250, r=40)
         )
 
         config = {
@@ -900,7 +900,7 @@ def server(input, output, session):
             xaxis_title="",
             yaxis_title="",
             height=height,
-            margin=dict(t=10, b=40, l=250, r=40)
+            margin=dict(t=60, b=40, l=250, r=40)
         )
 
         config = {
@@ -1414,8 +1414,8 @@ def server(input, output, session):
             rows_html.append(f'<tr style="background-color: {bg_color};">{"".join(cells)}</tr>')
 
         table_html = f'''
-        <div style="width: 100%; height: 600px; overflow: auto; border: 1px solid #dee2e6; border-radius: 4px;">
-            <table style="width: 100%; border-collapse: collapse; font-family: monospace; font-size: 13px;">
+        <div style="width: 100%; height: 600px; overflow: auto; border: 1px solid #dee2e6; border-radius: 4px; -webkit-overflow-scrolling: touch;">
+            <table style="width: 100%; border-collapse: collapse; font-family: monospace; font-size: 13px; min-width: max-content;">
                 <thead style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 10;">
                     {header_html}
                 </thead>
@@ -1424,6 +1424,17 @@ def server(input, output, session):
                 </tbody>
             </table>
         </div>
+        <style>
+            @media (max-width: 768px) {{
+                /* Mobile: reduce font size and padding */
+                #wide_format_table table {{
+                    font-size: 11px !important;
+                }}
+                #wide_format_table th, #wide_format_table td {{
+                    padding: 4px !important;
+                }}
+            }}
+        </style>
         '''
 
         return HTML(table_html)

@@ -412,7 +412,7 @@ def create_data_table_tab():
             ui.h3("CPI Data Table (Wide Format)"),
             ui.p("Categories as rows, dates as columns - matches original Statistics Canada format"),
             ui.p("Priority categories (All-items, Goods, Services, Energy, etc.) are listed first, followed by other categories alphabetically."),
-            ui.output_data_frame("wide_format_table"),
+            ui.output_ui("wide_format_table"),
         )
     )
 
