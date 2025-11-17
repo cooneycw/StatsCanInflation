@@ -176,6 +176,8 @@ Base effects occur when YoY inflation changes significantly, not because current
 
 ### Calculation Methodology
 
+**This implementation follows the methodology recommended by the European Central Bank, Bank of Canada, and Statistics Canada.**
+
 **Core Metrics** (from `src/models/inflation.py:249-282`):
 
 1. **Annualized Month-over-Month (Annualized MoM)**
@@ -185,9 +187,12 @@ Base effects occur when YoY inflation changes significantly, not because current
 
 2. **Base Effect Contribution**
    - Formula: `YoY inflation - Annualized MoM`
+   - This measures how much of the YoY rate stems from unusual price movements 12 months ago
    - Positive value: YoY is higher than current momentum suggests (base effect pulling it up)
    - Negative value: YoY is lower than current momentum suggests (base effect pulling it down)
    - Near zero: YoY accurately reflects current price trends (minimal base effects)
+
+**Research Validation**: This methodology is validated in the research paper "Understanding and Predicting Base Effects in Canadian Inflation" (available in the Research tab of the application). The paper analyzes 9 major base effect episodes from 2020-2025 and confirms this approach aligns with central banking best practices.
 
 3. **Momentum Period Options**
    - **Monthly**: Uses single-month MoM (noisy but responsive)

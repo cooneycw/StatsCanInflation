@@ -1452,3 +1452,23 @@ def server(input, output, session):
         table_data.to_csv(csv_buffer, index=False)
 
         return csv_buffer.getvalue()
+
+    # =========================================================================
+    # Research Tab - PDF Download
+    # =========================================================================
+
+    @render.download(filename="Understanding_Base_Effects_in_Canadian_Inflation.pdf")
+    def download_research_pdf():
+        """Download the base effects research paper PDF."""
+        import os
+
+        # Path to the research PDF
+        pdf_path = os.path.join(os.path.dirname(__file__), "..", "..", "research",
+                                "Understanding and Predicting Base Effects in Canadian Inflation_ A Practical Guide for 2020-2025 and Beyond.pdf")
+
+        # Normalize the path
+        pdf_path = os.path.normpath(pdf_path)
+
+        # Read and return the PDF file
+        with open(pdf_path, 'rb') as f:
+            return f.read()

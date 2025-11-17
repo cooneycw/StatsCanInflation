@@ -350,6 +350,118 @@ def create_detailed_heatmap_tab():
     )
 
 
+def create_research_tab():
+    """Create the Research tab with methodology documentation."""
+    return ui.nav_panel(
+        "Research",
+        ui.h3("Base Effects Methodology & Research"),
+        ui.p(
+            "This application's base effects analysis follows the methodology recommended by "
+            "central banks and economic research institutions."
+        ),
+
+        ui.h4("📄 Research Paper"),
+        ui.div(
+            ui.h5("Understanding and Predicting Base Effects in Canadian Inflation"),
+            ui.p(
+                "A comprehensive guide to base effects in Canadian inflation from 2020-2025, "
+                "covering the mathematical foundations, practical calculation methods, and "
+                "historical episodes that shaped Canadian inflation readings."
+            ),
+            ui.tags.ul(
+                ui.tags.li("Core formula: Base Effect = YoY Inflation − Annualized MoM"),
+                ui.tags.li("Practical Excel-based tracking tools"),
+                ui.tags.li("Analysis of 9 major base effect episodes (2020-2025)"),
+                ui.tags.li("Forward-looking prediction methodology"),
+            ),
+            ui.download_button(
+                "download_research_pdf",
+                "Download Research Paper (PDF)",
+                class_="btn-primary",
+                style="margin-top: 15px; margin-bottom: 20px;"
+            ),
+            class_="metric-card"
+        ),
+
+        ui.hr(),
+
+        ui.h4("📊 Methodology Used in This Application"),
+        ui.div(
+            ui.h5("Base Effects Calculation"),
+            ui.tags.p(
+                ui.tags.strong("Annualized Month-over-Month Momentum:"),
+                " MoM change × 12"
+            ),
+            ui.tags.p("This shows what annual inflation would be if current monthly price changes continued for a full year."),
+
+            ui.tags.p(
+                ui.tags.strong("Base Effect Contribution:"),
+                " YoY inflation − Annualized MoM"
+            ),
+            ui.tags.p(
+                "This reveals how much of the year-over-year inflation rate is due to unusual price movements "
+                "from 12 months ago rather than current price momentum."
+            ),
+
+            ui.h5("Interpretation", style="margin-top: 20px;"),
+            ui.tags.ul(
+                ui.tags.li(ui.tags.strong("Positive base effect:"), " YoY inflation is higher than current momentum suggests (prices 12 months ago were unusually low)"),
+                ui.tags.li(ui.tags.strong("Negative base effect:"), " YoY inflation is lower than current momentum suggests (prices 12 months ago were unusually high)"),
+                ui.tags.li(ui.tags.strong("Near-zero base effect:"), " YoY inflation accurately reflects current price trends"),
+            ),
+            class_="metric-card"
+        ),
+
+        ui.hr(),
+
+        ui.h4("🎯 Momentum Period Options"),
+        ui.div(
+            ui.tags.p("To reduce noise from month-to-month volatility, this application offers three momentum smoothing options:"),
+            ui.tags.ul(
+                ui.tags.li(ui.tags.strong("Monthly:"), " Uses the most recent month's MoM change (noisy but timely)"),
+                ui.tags.li(ui.tags.strong("Quarterly:"), " Uses 3-month average MoM change (recommended default)"),
+                ui.tags.li(ui.tags.strong("Half-year:"), " Uses 6-month average MoM change (smoothest, lags trends)"),
+            ),
+            ui.tags.p(
+                "The quarterly option (3-month average) provides the best balance between smoothing volatility "
+                "and reflecting current trends, consistent with Bank of Canada analytical practices.",
+                style="font-style: italic; color: #6c757d; margin-top: 10px;"
+            ),
+            class_="metric-card"
+        ),
+
+        ui.hr(),
+
+        ui.h4("📚 Additional Resources"),
+        ui.div(
+            ui.tags.ul(
+                ui.tags.li(
+                    ui.tags.a(
+                        "Statistics Canada - Consumer Price Index Portal",
+                        href="https://www.statcan.gc.ca/en/subjects-start/prices_and_price_indexes/consumer_price_indexes",
+                        target="_blank"
+                    )
+                ),
+                ui.tags.li(
+                    ui.tags.a(
+                        "Bank of Canada - CPI Common Component",
+                        href="https://www.bankofcanada.ca/rates/price-indexes/cpi/",
+                        target="_blank"
+                    )
+                ),
+                ui.tags.li(
+                    ui.tags.a(
+                        "European Central Bank - Base Effects Explained",
+                        href="https://www.ecb.europa.eu/stats/macroeconomic_and_sectoral/hicp/html/index.en.html",
+                        target="_blank"
+                    )
+                ),
+            ),
+            class_="metric-card"
+        ),
+    )
+
+
 def create_data_table_tab():
     """Create the Data Table tab with wide-format view."""
     return ui.nav_panel(
@@ -422,9 +534,8 @@ app_ui = ui.page_navbar(
     create_recent_trends_tab(),
     create_historical_tab(),
     create_detailed_heatmap_tab(),
-    # create_category_breakdown_tab(),  # Removed - replaced by detailed heatmap
-    # create_custom_analysis_tab(),  # Removed from UI but backend functions remain
     create_data_table_tab(),
+    create_research_tab(),
     title="Statistics Canada Inflation Analysis",
     id="main_navbar",
     fillable=True,
