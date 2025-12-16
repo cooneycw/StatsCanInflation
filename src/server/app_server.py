@@ -676,9 +676,9 @@ def server(input, output, session):
             xaxis_title="",
             yaxis_title="",
             height=height,
-            margin=dict(t=60, b=40, l=150, r=10)
+            margin=dict(t=60, b=40, l=10, r=10),
+            yaxis=dict(automargin=True, tickfont=dict(size=11))
         )
-        fig.update_yaxes(automargin=True, tickfont=dict(size=10))
 
         config = {
             'responsive': True,
@@ -960,9 +960,9 @@ def server(input, output, session):
             xaxis_title="",
             yaxis_title="",
             height=height,
-            margin=dict(t=60, b=40, l=150, r=10)
+            margin=dict(t=60, b=40, l=10, r=10),
+            yaxis=dict(automargin=True, tickfont=dict(size=11))
         )
-        fig.update_yaxes(automargin=True, tickfont=dict(size=10))
 
         config = {
             'responsive': True,
