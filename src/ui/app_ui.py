@@ -643,6 +643,13 @@ app_ui = ui.page_navbar(
                     margin-right: 10px;
                 }
             }
+
+            /* Heatmap mobile responsiveness */
+            .heatmap-container {
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
         """)
     ),
     footer=ui.div(

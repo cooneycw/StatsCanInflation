@@ -653,7 +653,17 @@ def server(input, output, session):
             y=heatmap_data.index,
             colorscale='RdYlGn_r',
             zmid=2.0,  # Center at 2% target
-            colorbar=dict(title="YoY %"),
+            colorbar=dict(
+                title="YoY %",
+                orientation="h",
+                y=-0.15,
+                yanchor="top",
+                x=0.5,
+                xanchor="center",
+                len=0.8,
+                thickness=15,
+                titleside="bottom"
+            ),
             hovertemplate='%{y}<br>%{x}<br>%{z:.1f}%<extra></extra>'
         ))
 
@@ -664,8 +674,9 @@ def server(input, output, session):
             xaxis_title="",
             yaxis_title="",
             height=height,
-            margin=dict(t=60, b=40, l=250, r=40)
+            margin=dict(t=60, b=100, l=150, r=10)
         )
+        fig.update_yaxes(automargin=True, tickfont=dict(size=10))
 
         config = {
             'responsive': True,
@@ -674,7 +685,12 @@ def server(input, output, session):
             'modeBarButtonsToRemove': ['lasso2d', 'select2d']
         }
 
-        return HTML(fig.to_html(include_plotlyjs=False, config=config))
+        html_content = fig.to_html(include_plotlyjs=False, config=config)
+        return HTML(f'''
+<div class="heatmap-container" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+    {html_content}
+</div>
+''')
 
     # ===== HISTORICAL TAB =====
 
@@ -918,7 +934,17 @@ def server(input, output, session):
             y=heatmap_data.index,
             colorscale='RdYlGn_r',
             zmid=2.0,  # Center at 2% target
-            colorbar=dict(title="YoY %"),
+            colorbar=dict(
+                title="YoY %",
+                orientation="h",
+                y=-0.15,
+                yanchor="top",
+                x=0.5,
+                xanchor="center",
+                len=0.8,
+                thickness=15,
+                titleside="bottom"
+            ),
             hovertemplate='%{y}<br>%{x}<br>%{z:.1f}%<extra></extra>'
         ))
 
@@ -929,8 +955,9 @@ def server(input, output, session):
             xaxis_title="",
             yaxis_title="",
             height=height,
-            margin=dict(t=60, b=40, l=250, r=40)
+            margin=dict(t=60, b=100, l=150, r=10)
         )
+        fig.update_yaxes(automargin=True, tickfont=dict(size=10))
 
         config = {
             'responsive': True,
@@ -939,7 +966,12 @@ def server(input, output, session):
             'modeBarButtonsToRemove': ['lasso2d', 'select2d']
         }
 
-        return HTML(fig.to_html(include_plotlyjs=False, config=config))
+        html_content = fig.to_html(include_plotlyjs=False, config=config)
+        return HTML(f'''
+<div class="heatmap-container" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+    {html_content}
+</div>
+''')
 
     # ===== CATEGORY BREAKDOWN TAB =====
 
