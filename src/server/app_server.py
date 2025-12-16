@@ -656,12 +656,15 @@ def server(input, output, session):
             colorbar=dict(
                 title=dict(text="YoY %", side="top"),
                 orientation="h",
-                y=1.02,
+                yref="paper",
+                y=1.0,
                 yanchor="bottom",
+                xref="paper",
                 x=0.5,
                 xanchor="center",
-                len=0.8,
-                thickness=15
+                len=1.0,
+                thickness=15,
+                ypad=10
             ),
             hovertemplate='%{y}<br>%{x}<br>%{z:.1f}%<extra></extra>'
         ))
@@ -673,7 +676,7 @@ def server(input, output, session):
             xaxis_title="",
             yaxis_title="",
             height=height,
-            margin=dict(t=80, b=40, l=150, r=10)
+            margin=dict(t=60, b=40, l=150, r=10)
         )
         fig.update_yaxes(automargin=True, tickfont=dict(size=10))
 
@@ -937,12 +940,15 @@ def server(input, output, session):
             colorbar=dict(
                 title=dict(text="YoY %", side="top"),
                 orientation="h",
-                y=1.02,
+                yref="paper",
+                y=1.0,
                 yanchor="bottom",
+                xref="paper",
                 x=0.5,
                 xanchor="center",
-                len=0.8,
-                thickness=15
+                len=1.0,
+                thickness=15,
+                ypad=10
             ),
             hovertemplate='%{y}<br>%{x}<br>%{z:.1f}%<extra></extra>'
         ))
@@ -954,7 +960,7 @@ def server(input, output, session):
             xaxis_title="",
             yaxis_title="",
             height=height,
-            margin=dict(t=80, b=40, l=150, r=10)
+            margin=dict(t=60, b=40, l=150, r=10)
         )
         fig.update_yaxes(automargin=True, tickfont=dict(size=10))
 
