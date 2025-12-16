@@ -539,11 +539,21 @@ app_ui = ui.page_navbar(
     title="Statistics Canada Inflation Analysis",
     id="main_navbar",
     fillable=True,
-    head=ui.head_content(
-        # Add Canadian maple leaf favicon
-        ui.tags.link(rel="icon", type="image/svg+xml", href="favicon.svg"),
-    ),
     header=ui.div(
+        # Add Canadian maple leaf favicon using JavaScript injection
+        # Use absolute path from app root for shinyapps.io compatibility
+        ui.tags.script("""
+            (function() {
+                var link = document.createElement('link');
+                link.rel = 'icon';
+                link.type = 'image/svg+xml';
+                // Get the base path from the current URL (works on both local and shinyapps.io)
+                var basePath = window.location.pathname.replace(/\/_w_[^/]+.*$/, '');
+                if (!basePath.endsWith('/')) basePath += '/';
+                link.href = basePath + 'favicon.svg';
+                document.head.appendChild(link);
+            })();
+        """),
         # Load Plotly library globally for all charts (version must match what Plotly Python generates)
         ui.tags.script(src="https://cdn.plot.ly/plotly-3.2.0.min.js", integrity="sha256-iZ2u/oU2wf/vDbl/ChcX93WgbBRSBvUO6N413hDz7xM=", crossorigin="anonymous"),
         create_header_panel(),
