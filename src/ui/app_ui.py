@@ -540,17 +540,14 @@ app_ui = ui.page_navbar(
     id="main_navbar",
     fillable=True,
     header=ui.div(
-        # Add Canadian maple leaf favicon using JavaScript injection
-        # Use absolute path from app root for shinyapps.io compatibility
+        # Add Canadian maple leaf favicon as inline SVG data URI
+        # This avoids file serving issues on shinyapps.io
         ui.tags.script("""
             (function() {
                 var link = document.createElement('link');
                 link.rel = 'icon';
                 link.type = 'image/svg+xml';
-                // Get the base path from the current URL (works on both local and shinyapps.io)
-                var basePath = window.location.pathname.replace(/\/_w_[^/]+.*$/, '');
-                if (!basePath.endsWith('/')) basePath += '/';
-                link.href = basePath + 'favicon.svg';
+                link.href = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#f8f9fa"/><path d="M50 15 L55 35 L65 30 L60 40 L75 42 L62 50 L70 60 L58 58 L55 75 L50 60 L45 75 L42 58 L30 60 L38 50 L25 42 L40 40 L35 30 L45 35 Z" fill="#E31B23" stroke="#C8102E" stroke-width="1"/></svg>');
                 document.head.appendChild(link);
             })();
         """),
