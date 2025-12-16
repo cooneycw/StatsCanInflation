@@ -654,10 +654,10 @@ def server(input, output, session):
             colorscale='RdYlGn_r',
             zmid=2.0,  # Center at 2% target
             colorbar=dict(
-                title=dict(text="YoY %", side="bottom"),
+                title=dict(text="YoY %", side="top"),
                 orientation="h",
-                y=-0.15,
-                yanchor="top",
+                y=1.02,
+                yanchor="bottom",
                 x=0.5,
                 xanchor="center",
                 len=0.8,
@@ -673,7 +673,7 @@ def server(input, output, session):
             xaxis_title="",
             yaxis_title="",
             height=height,
-            margin=dict(t=60, b=100, l=150, r=10)
+            margin=dict(t=80, b=40, l=150, r=10)
         )
         fig.update_yaxes(automargin=True, tickfont=dict(size=10))
 
@@ -681,12 +681,13 @@ def server(input, output, session):
             'responsive': True,
             'displayModeBar': True,
             'displaylogo': False,
-            'modeBarButtonsToRemove': ['lasso2d', 'select2d']
+            'modeBarButtonsToRemove': ['lasso2d', 'select2d'],
+            'scrollZoom': False
         }
 
         html_content = fig.to_html(include_plotlyjs=False, config=config)
         return HTML(f'''
-<div class="heatmap-container" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+<div class="heatmap-container" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y;">
     {html_content}
 </div>
 ''')
@@ -934,10 +935,10 @@ def server(input, output, session):
             colorscale='RdYlGn_r',
             zmid=2.0,  # Center at 2% target
             colorbar=dict(
-                title=dict(text="YoY %", side="bottom"),
+                title=dict(text="YoY %", side="top"),
                 orientation="h",
-                y=-0.15,
-                yanchor="top",
+                y=1.02,
+                yanchor="bottom",
                 x=0.5,
                 xanchor="center",
                 len=0.8,
@@ -953,7 +954,7 @@ def server(input, output, session):
             xaxis_title="",
             yaxis_title="",
             height=height,
-            margin=dict(t=60, b=100, l=150, r=10)
+            margin=dict(t=80, b=40, l=150, r=10)
         )
         fig.update_yaxes(automargin=True, tickfont=dict(size=10))
 
@@ -961,12 +962,13 @@ def server(input, output, session):
             'responsive': True,
             'displayModeBar': True,
             'displaylogo': False,
-            'modeBarButtonsToRemove': ['lasso2d', 'select2d']
+            'modeBarButtonsToRemove': ['lasso2d', 'select2d'],
+            'scrollZoom': False
         }
 
         html_content = fig.to_html(include_plotlyjs=False, config=config)
         return HTML(f'''
-<div class="heatmap-container" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+<div class="heatmap-container" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y;">
     {html_content}
 </div>
 ''')
