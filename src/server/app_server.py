@@ -654,15 +654,14 @@ def server(input, output, session):
             colorscale='RdYlGn_r',
             zmid=2.0,  # Center at 2% target
             colorbar=dict(
-                title="YoY %",
+                title=dict(text="YoY %", side="bottom"),
                 orientation="h",
                 y=-0.15,
                 yanchor="top",
                 x=0.5,
                 xanchor="center",
                 len=0.8,
-                thickness=15,
-                titleside="bottom"
+                thickness=15
             ),
             hovertemplate='%{y}<br>%{x}<br>%{z:.1f}%<extra></extra>'
         ))
@@ -935,15 +934,14 @@ def server(input, output, session):
             colorscale='RdYlGn_r',
             zmid=2.0,  # Center at 2% target
             colorbar=dict(
-                title="YoY %",
+                title=dict(text="YoY %", side="bottom"),
                 orientation="h",
                 y=-0.15,
                 yanchor="top",
                 x=0.5,
                 xanchor="center",
                 len=0.8,
-                thickness=15,
-                titleside="bottom"
+                thickness=15
             ),
             hovertemplate='%{y}<br>%{x}<br>%{z:.1f}%<extra></extra>'
         ))
