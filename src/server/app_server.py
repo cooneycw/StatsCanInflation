@@ -653,19 +653,7 @@ def server(input, output, session):
             y=heatmap_data.index,
             colorscale='RdYlGn_r',
             zmid=2.0,  # Center at 2% target
-            colorbar=dict(
-                title=dict(text="YoY %", side="top"),
-                orientation="h",
-                yref="paper",
-                y=1.0,
-                yanchor="bottom",
-                xref="paper",
-                x=0.5,
-                xanchor="center",
-                len=1.0,
-                thickness=15,
-                ypad=10
-            ),
+            colorbar=dict(title="YoY %"),
             hovertemplate='%{y}<br>%{x}<br>%{z:.1f}%<extra></extra>'
         ))
 
@@ -676,7 +664,7 @@ def server(input, output, session):
             xaxis_title="",
             yaxis_title="",
             height=height,
-            margin=dict(t=60, b=40, l=10, r=10),
+            margin=dict(t=60, b=40, l=10, r=80),
             yaxis=dict(automargin=True, tickfont=dict(size=11))
         )
 
@@ -937,19 +925,7 @@ def server(input, output, session):
             y=heatmap_data.index,
             colorscale='RdYlGn_r',
             zmid=2.0,  # Center at 2% target
-            colorbar=dict(
-                title=dict(text="YoY %", side="top"),
-                orientation="h",
-                yref="paper",
-                y=1.0,
-                yanchor="bottom",
-                xref="paper",
-                x=0.5,
-                xanchor="center",
-                len=1.0,
-                thickness=15,
-                ypad=10
-            ),
+            colorbar=dict(title="YoY %"),
             hovertemplate='%{y}<br>%{x}<br>%{z:.1f}%<extra></extra>'
         ))
 
@@ -960,7 +936,7 @@ def server(input, output, session):
             xaxis_title="",
             yaxis_title="",
             height=height,
-            margin=dict(t=60, b=40, l=10, r=10),
+            margin=dict(t=60, b=40, l=10, r=80),
             yaxis=dict(automargin=True, tickfont=dict(size=11))
         )
 
