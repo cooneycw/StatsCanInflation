@@ -284,6 +284,9 @@ def server(input, output, session):
             category_orders={'category': sorted_cats}
         )
 
+        # Add custom hovertemplate to show full category names
+        fig.update_traces(hovertemplate='%{fullData.name}: %{y:.2f}%<extra></extra>')
+
         # Add 2% inflation target line if requested
         if input.show_target_line():
             fig.add_hline(
@@ -401,16 +404,19 @@ def server(input, output, session):
             y=all_items_recent['yoy_change'],
             name='YoY Inflation (Actual)',
             line=dict(color='#0d6efd', width=3),
-            mode='lines'
+            mode='lines',
+            hovertemplate='YoY Inflation (Actual): %{y:.2f}%<extra></extra>'
         ))
 
         # Add annualized momentum (using selected period)
+        annualized_name = f'Annualized {momentum_label}'
         fig.add_trace(go.Scatter(
             x=all_items_recent['date'],
             y=all_items_recent['current_momentum'],
-            name=f'Annualized {momentum_label}',
+            name=annualized_name,
             line=dict(color='#198754', width=2, dash='dot'),
-            mode='lines'
+            mode='lines',
+            hovertemplate=f'{annualized_name}: %{{y:.2f}}%<extra></extra>'
         ))
 
         # Add base effect contribution as shaded area
@@ -421,7 +427,8 @@ def server(input, output, session):
             fill='tozeroy',
             fillcolor='rgba(220, 53, 69, 0.2)',
             line=dict(color='#dc3545', width=1),
-            mode='lines'
+            mode='lines',
+            hovertemplate='Base Effect Contribution: %{y:.2f}%<extra></extra>'
         ))
 
         # Add zero line
@@ -435,17 +442,19 @@ def server(input, output, session):
                 name='Projected YoY (if prices flat)',
                 line=dict(color='#6c757d', width=2, dash='dash'),
                 mode='lines+markers',
-                marker=dict(size=6)
+                marker=dict(size=6),
+                hovertemplate='Projected YoY (if prices flat): %{y:.2f}%<extra></extra>'
             ))
 
         if len(projection_avg) > 0:
             fig.add_trace(go.Scatter(
                 x=projection_avg['date'],
                 y=projection_avg['yoy_change'],
-                name=f'Projected YoY (at current momentum)',
+                name='Projected YoY (current momentum)',
                 line=dict(color='#fd7e14', width=2, dash='dash'),
                 mode='lines+markers',
-                marker=dict(size=6)
+                marker=dict(size=6),
+                hovertemplate='Projected YoY (current momentum): %{y:.2f}%<extra></extra>'
             ))
 
         fig.update_layout(
@@ -546,7 +555,8 @@ def server(input, output, session):
             y=all_items['yoy_change'],
             name='YoY (Monthly)',
             line=dict(color='lightgray', width=1),
-            opacity=0.5
+            opacity=0.5,
+            hovertemplate='YoY (Monthly): %{y:.2f}%<extra></extra>'
         ))
 
         # Add rolling averages
@@ -554,21 +564,24 @@ def server(input, output, session):
             x=all_items['date'],
             y=all_items['yoy_change_rolling_3m'],
             name='3-Month Average',
-            line=dict(color='blue', width=2)
+            line=dict(color='blue', width=2),
+            hovertemplate='3-Month Average: %{y:.2f}%<extra></extra>'
         ))
 
         fig.add_trace(go.Scatter(
             x=all_items['date'],
             y=all_items['yoy_change_rolling_6m'],
             name='6-Month Average',
-            line=dict(color='orange', width=2)
+            line=dict(color='orange', width=2),
+            hovertemplate='6-Month Average: %{y:.2f}%<extra></extra>'
         ))
 
         fig.add_trace(go.Scatter(
             x=all_items['date'],
             y=all_items['yoy_change_rolling_12m'],
             name='12-Month Average',
-            line=dict(color='red', width=2, dash='dash')
+            line=dict(color='red', width=2, dash='dash'),
+            hovertemplate='12-Month Average: %{y:.2f}%<extra></extra>'
         ))
 
         fig.update_layout(
@@ -750,6 +763,9 @@ def server(input, output, session):
             category_orders={'category': sorted_cats}
         )
 
+        # Add custom hovertemplate to show full category names
+        fig.update_traces(hovertemplate='%{fullData.name}: %{y:.1f}<extra></extra>')
+
         fig.update_layout(
             hovermode='x unified',
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
@@ -786,6 +802,9 @@ def server(input, output, session):
             category_orders={'category': sorted_cats}
         )
 
+        # Add custom hovertemplate to show full category names
+        fig.update_traces(hovertemplate='%{fullData.name}: %{y:.2f}%<extra></extra>')
+
         fig.update_layout(
             hovermode='x unified',
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
@@ -793,7 +812,14 @@ def server(input, output, session):
 
         fig.add_hline(y=2.0, line_dash="dash", line_color="gray", annotation_text="2% Target")
 
-        return HTML(fig.to_html(include_plotlyjs=False, config={'responsive': True}))
+        config = {
+            'responsive': True,
+            'displayModeBar': True,
+            'displaylogo': False,
+            'modeBarButtonsToRemove': ['lasso2d', 'select2d']
+        }
+
+        return HTML(fig.to_html(include_plotlyjs=False, config=config))
 
     @output
     @render.ui
@@ -835,6 +861,9 @@ def server(input, output, session):
             labels={'cumulative_inflation': 'Cumulative Inflation (%)', 'date': 'Date', 'category': 'Category'},
             category_orders={'category': sorted_cats}
         )
+
+        # Add custom hovertemplate to show full category names
+        fig.update_traces(hovertemplate='%{fullData.name}: %{y:.2f}%<extra></extra>')
 
         fig.update_layout(
             hovermode='x unified',
@@ -1054,6 +1083,9 @@ def server(input, output, session):
             category_orders={'category': sorted_cats}
         )
 
+        # Add custom hovertemplate to show full category names
+        fig.update_traces(hovertemplate='%{fullData.name}: %{y:.2f}%<extra></extra>')
+
         fig.update_layout(
             hovermode='x unified',
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
@@ -1129,6 +1161,9 @@ def server(input, output, session):
             labels={'yoy_change': 'YoY Inflation (%)', 'date': 'Date', 'category': 'Category'},
             category_orders={'category': sorted_cats}
         )
+
+        # Add custom hovertemplate to show full category names
+        fig.update_traces(hovertemplate='%{fullData.name}: %{y:.2f}%<extra></extra>')
 
         fig.update_layout(
             hovermode='x unified',
